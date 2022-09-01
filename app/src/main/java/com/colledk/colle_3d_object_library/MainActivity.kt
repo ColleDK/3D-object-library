@@ -12,7 +12,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         glView = ObjectSurfaceView(this).apply {
-            this.initialize(R.raw.cube)
+            this.loadObject(R.raw.cube)
         }
 
         setContentView(glView)

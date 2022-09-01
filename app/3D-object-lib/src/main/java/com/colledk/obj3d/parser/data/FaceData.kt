@@ -1,5 +1,5 @@
 package com.colledk.obj3d.parser.data
 
-data class FaceData(
+internal data class FaceData(
     val vertexIndeces: List<Int>
 )
