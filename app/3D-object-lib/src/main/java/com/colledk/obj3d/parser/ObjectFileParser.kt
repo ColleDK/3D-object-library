@@ -5,7 +5,7 @@ class ObjectFileParser {
 
 
     companion object{
-        val VERTEX_REGEX = "v[ ]+([-+]?[0-9]+(.[0-9]+)?([ ])?)+".toRegex()
+        val VERTEX_REGEX = "v[ ]+([-+]?[0-9]+(.[0-9]+)?([ ])?){3,4}".toRegex()
         val FACE_REGEX = "f[ ]+([-+]?[0-9]+([ /])?)+".toRegex()
     }
 }
