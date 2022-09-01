@@ -40,4 +40,7 @@ dependencies {
 
     // Timber
     implementation 'com.jakewharton.timber:timber:5.0.1'
+
+    // Mockito
+    testImplementation "org.mockito:mockito-core:4.7.0"
 }
