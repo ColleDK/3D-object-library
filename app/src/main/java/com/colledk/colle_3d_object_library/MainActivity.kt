@@ -11,7 +11,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        glView = ObjectSurfaceView(this)
+        glView = ObjectSurfaceView(this).apply {
+            this.initialize(R.raw.cube)
+        }
 
         setContentView(glView)
     }
