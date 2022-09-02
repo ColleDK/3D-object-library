@@ -20,10 +20,19 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
     @Volatile
     var backgroundColor: FloatArray = floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f)
 
+    @Volatile
+    var xAngle: Float = 0f
+
+    @Volatile
+    var yAngle: Float = 0f
+
     // Define our matrices in a 4D spectrum (4x4)
     private val projectionMatrix = FloatArray(16)
     private val viewMatrix = FloatArray(16)
     private val vpMatrix = FloatArray(16)
+
+    private val rotationX = FloatArray(16)
+    private val rotationY = FloatArray(16)
     private val rotationMatrix = FloatArray(16)
 
     private lateinit var shape: Shape
@@ -57,7 +66,10 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.multiplyMM(vpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
         // Set the rotation of the object
-        Matrix.setRotateM(rotationMatrix, 0, 0f, 1f, 1f, 1f)
+        Matrix.setRotateM(rotationX, 0, xAngle, 0f, 1f, 0f)
+        Matrix.setRotateM(rotationY, 0, yAngle, 1f, 0f, 0f)
+
+        Matrix.multiplyMM(rotationMatrix, 0, rotationX, 0, rotationY, 0)
 
         // Get the current mvp matrix
         Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, rotationMatrix, 0)

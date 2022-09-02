@@ -4,11 +4,18 @@ import android.content.Context
 import android.graphics.Color
 import android.opengl.GLSurfaceView
 import android.os.Build
+import android.view.MotionEvent
 import com.colledk.obj3d.parser.ObjectFileParser
+import timber.log.Timber
+
+private const val TOUCH_SCALE_FACTOR = 180f / 1000f
 
 class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
     private val renderer: ObjectRenderer
+
+    private var previousX: Float = 0f
+    private var previousY: Float = 0f
 
     init {
         // We define the current OpenGL version to be 2.0
@@ -93,5 +100,25 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                 renderer.backgroundColor = floatArrayOf(color[0], color[1], color[2], color[3])
             }
         }
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        Timber.d("Handling new touch event")
+        when(event.action){
+            MotionEvent.ACTION_MOVE -> {
+                val dx = event.x - previousX
+                val dy = event.y - previousY
+
+                renderer.xAngle += dx * TOUCH_SCALE_FACTOR
+                renderer.yAngle += dy * TOUCH_SCALE_FACTOR
+
+                previousX = event.x
+                previousY = event.y
+
+                requestRender()
+            }
+        }
+
+        return true
     }
 }
