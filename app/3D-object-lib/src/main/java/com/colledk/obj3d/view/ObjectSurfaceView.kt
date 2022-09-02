@@ -1,4 +1,4 @@
-package com.colledk.obj3d
+package com.colledk.obj3d.view
 
 import android.content.Context
 import android.graphics.Color
