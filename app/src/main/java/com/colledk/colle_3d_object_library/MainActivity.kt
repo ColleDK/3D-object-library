@@ -6,13 +6,14 @@ import android.view.SurfaceView
 import com.colledk.obj3d.ObjectSurfaceView
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var glView: SurfaceView
+    private lateinit var glView: ObjectSurfaceView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         glView = ObjectSurfaceView(this).apply {
-            this.loadObject(R.raw.cube)
+            loadObject(R.raw.cube)
+            setBackgroundColor(floatArrayOf(0.5f, 1.0f))
         }
 
         setContentView(glView)
