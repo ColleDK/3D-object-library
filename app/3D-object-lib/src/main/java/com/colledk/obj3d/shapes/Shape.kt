@@ -3,13 +3,10 @@ package com.colledk.obj3d.shapes
 import android.opengl.GLES20
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.view.loadShader
-import timber.log.Timber
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.nio.ShortBuffer
-import kotlin.math.max
-import kotlin.math.min
 
 internal class Shape(
     private val objectData: ObjectData
@@ -79,17 +76,37 @@ internal class Shape(
             }
         }
 
+    private val colorBuffer: FloatBuffer =
+        ByteBuffer.allocateDirect(objectData.vertices.size * 4 * ShapeUtil.FLOAT.byteSize).run {
+            order(ByteOrder.nativeOrder())
+
+            asFloatBuffer().apply {
+                val colors = mutableListOf<Float>()
+                for (i in 0 until objectData.vertices.size){
+                    colors.addAll(
+                        color.toList()
+                    )
+                }
+                put(colors.toFloatArray())
+
+                position(0)
+            }
+        }
+
     // Create the shader code
     private val vertexShaderCode =
         "uniform mat4 uMVPMatrix;" +
                 "attribute vec4 aPosition;" +
+                "attribute vec4 aColor;" +
+                "varying vec4 vColor;" +
                 "void main(){" +
+                "   vColor = aColor;" +
                 "   gl_Position = uMVPMatrix * aPosition;" +
                 "}"
 
     private val fragmentShaderCode =
         "precision mediump float;" +
-                "uniform vec4 vColor;" +
+                "varying vec4 vColor;" +
                 "void main(){" +
                 "   gl_FragColor = vColor;" +
                 "}"
@@ -111,30 +128,37 @@ internal class Shape(
 
     // Create handles for variables in the shaders
     private var aPositionHandle: Int = 0
-    private var vColorHandle: Int = 0
+    private var aColorHandle: Int = 0
     private var uMvpHandle: Int = 0
 
     private val vertexCount: Int = coords().size / COORDS_PER_VERTEX
-    private val vertexStride: Int = COORDS_PER_VERTEX / ShapeUtil.FLOAT.byteSize
+    private val vertexStride: Int = COORDS_PER_VERTEX * ShapeUtil.FLOAT.byteSize
+    private val colorStride: Int = COORDS_PER_COLOR * ShapeUtil.FLOAT.byteSize
 
     // Create draw functionality
     fun draw(mvpMatrix: FloatArray){
         GLES20.glUseProgram(mProgram)
-
-        // Load the color handle
-        vColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor")
-
-        // Set the color of the object
-        GLES20.glUniform4fv(vColorHandle, 1, color, 0)
 
         // Apply projection matrix
         uMvpHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix")
 
         GLES20.glUniformMatrix4fv(uMvpHandle, 1, false, mvpMatrix, 0)
 
+        // Load the color handle
+        aColorHandle = GLES20.glGetAttribLocation(mProgram, "aColor")
+
+        // Prepare color data
+        GLES20.glVertexAttribPointer(
+            aColorHandle,
+            COORDS_PER_COLOR,
+            GLES20.GL_FLOAT,
+            false,
+            colorStride,
+            colorBuffer
+        )
+
         // Load position handle
         aPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition")
-
 
         // Prepare coordinate data
         GLES20.glVertexAttribPointer(
@@ -147,6 +171,7 @@ internal class Shape(
         )
 
         // Enable handles
+        GLES20.glEnableVertexAttribArray(aColorHandle)
         GLES20.glEnableVertexAttribArray(aPositionHandle)
 
         // Draw the shape
@@ -154,9 +179,11 @@ internal class Shape(
 
         // Disable handles
         GLES20.glDisableVertexAttribArray(aPositionHandle)
+        GLES20.glDisableVertexAttribArray(aColorHandle)
     }
 
     companion object{
         const val COORDS_PER_VERTEX = 3
+        const val COORDS_PER_COLOR = 4
     }
 }
