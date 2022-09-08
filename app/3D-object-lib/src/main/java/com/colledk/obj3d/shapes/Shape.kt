@@ -3,6 +3,7 @@ package com.colledk.obj3d.shapes
 import android.opengl.GLES20
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.view.loadShader
+import timber.log.Timber
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -17,6 +18,13 @@ internal class Shape(
         0.7f,
         0.7f,
         0.7f,
+        1.0f,
+    )
+
+    private val lightColor = floatArrayOf(
+        1.0f,
+        0.66f,
+        0.0f,
         1.0f,
     )
 
@@ -94,23 +102,48 @@ internal class Shape(
             }
         }
 
+    private val lightColorBuffer: FloatBuffer =
+        ByteBuffer.allocateDirect(objectData.vertices.size * 4 * ShapeUtil.FLOAT.byteSize).run {
+            order(ByteOrder.nativeOrder())
+
+            asFloatBuffer().apply {
+                val colors = mutableListOf<Float>()
+                for (i in 0 until objectData.vertices.size){
+                    colors.addAll(
+                        lightColor.toList()
+                    )
+                }
+
+                put(colors.toFloatArray())
+
+                position(0)
+            }
+
+        }
+
     // Create the shader code
     private val vertexShaderCode =
-        "uniform mat4 uMVPMatrix;" +
+                "uniform mat4 uMVPMatrix;" +
                 "attribute vec4 aPosition;" +
                 "attribute vec4 aColor;" +
+                "attribute vec4 aLightColor;" +
                 "varying vec4 vColor;" +
+                "varying vec4 vLightColor;" +
                 "void main(){" +
                 "   vColor = aColor;" +
+                "   vLightColor = aLightColor;" +
                 "   gl_PointSize = 10.0;" +
                 "   gl_Position = uMVPMatrix * aPosition;" +
                 "}"
 
     private val fragmentShaderCode =
-        "precision mediump float;" +
+                "precision mediump float;" +
                 "varying vec4 vColor;" +
+                "varying vec4 vLightColor;" +
                 "void main(){" +
-                "   gl_FragColor = vColor;" +
+                "   float ambientStrength = 0.1;" +
+                "   vec4 ambient = ambientStrength * vLightColor;" +
+                "   gl_FragColor = ambient * vColor;" +
                 "}"
 
     // Initialize the program and attach shaders
@@ -131,6 +164,7 @@ internal class Shape(
     // Create handles for variables in the shaders
     private var aPositionHandle: Int = 0
     private var aColorHandle: Int = 0
+    private var aLightColorHandle: Int = 0
     private var uMvpHandle: Int = 0
 
     private val vertexCount: Int = coords().size / COORDS_PER_VERTEX
@@ -148,6 +182,9 @@ internal class Shape(
 
         // Load the color handle
         aColorHandle = GLES20.glGetAttribLocation(mProgram, "aColor")
+        if (aColorHandle == -1){
+            Timber.e("Color handle error")
+        }
 
         // Prepare color data
         GLES20.glVertexAttribPointer(
@@ -161,6 +198,9 @@ internal class Shape(
 
         // Load position handle
         aPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition")
+        if (aPositionHandle == -1){
+            Timber.e("Position handle error")
+        }
 
         // Prepare coordinate data
         GLES20.glVertexAttribPointer(
@@ -172,16 +212,34 @@ internal class Shape(
             vertexBuffer
         )
 
+        // Load light color handle
+        aLightColorHandle = GLES20.glGetAttribLocation(mProgram, "aLightColor")
+        if (aLightColorHandle == -1){
+            Timber.e("Light color handle error")
+        }
+
+        // Prepare color data
+        GLES20.glVertexAttribPointer(
+            aLightColorHandle,
+            COORDS_PER_COLOR,
+            GLES20.GL_FLOAT,
+            false,
+            colorStride,
+            lightColorBuffer
+        )
+
         // Enable handles
         GLES20.glEnableVertexAttribArray(aColorHandle)
         GLES20.glEnableVertexAttribArray(aPositionHandle)
+        GLES20.glEnableVertexAttribArray(aLightColorHandle)
 
         // Draw the shape
-        GLES20.glDrawElements(GLES20.GL_LINES, drawOrder().size, GLES20.GL_UNSIGNED_INT, drawBuffer)
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder().size, GLES20.GL_UNSIGNED_INT, drawBuffer)
 
         // Disable handles
         GLES20.glDisableVertexAttribArray(aPositionHandle)
         GLES20.glDisableVertexAttribArray(aColorHandle)
+        GLES20.glEnableVertexAttribArray(aLightColorHandle)
     }
 
     companion object{
