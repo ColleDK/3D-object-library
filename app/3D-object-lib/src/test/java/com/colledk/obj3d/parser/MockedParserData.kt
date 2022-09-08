@@ -3,55 +3,48 @@ package com.colledk.obj3d.parser
 import com.colledk.obj3d.parser.data.FaceData
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.parser.data.VertexData
+import com.colledk.obj3d.parser.data.VertexNormalData
 
 internal object MockedParserData {
 
     val parsedData = ObjectData(
         vertices = listOf(
             VertexData(
-                index = 1,
                 x = 0.0f,
                 y = 0.0f,
                 z = 0.0f
             ),
             VertexData(
-                index = 2,
                 x = 0.0f,
                 y = 0.0f,
                 z = 1.0f
             ),
             VertexData(
-                index = 3,
                 x = 0.0f,
                 y = 1.0f,
                 z = 0.0f
             ),
             VertexData(
-                index = 4,
                 x = 0.0f,
                 y = 1.0f,
                 z = 1.0f
             ),
             VertexData(
-                index = 5,
                 x = 1.0f,
                 y = 0.0f,
                 z = 0.0f
             ),
             VertexData(
-                index = 6,
                 x = 1.0f,
                 y = 0.0f,
                 z = 1.0f
             ),
             VertexData(
-                index = 7,
                 x = 1.0f,
                 y = 1.0f,
                 z = 0.0f
             ),
             VertexData(
-                index = 8,
                 x = 1.0f,
                 y = 1.0f,
                 z = 1.0f
@@ -61,63 +54,131 @@ internal object MockedParserData {
             FaceData(
                 vertexIndeces = listOf(
                     1, 7, 5
+                ),
+                vertexNormalIndeces = listOf(
+                    2, 2, 2
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     1, 3, 7
+                ),
+                vertexNormalIndeces = listOf(
+                    2, 2, 2
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     1, 4, 3
+                ),
+                vertexNormalIndeces = listOf(
+                    6, 6, 6
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     1, 2, 4
+                ),
+                vertexNormalIndeces = listOf(
+                    6, 6, 6
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     3, 8, 7
+                ),
+                vertexNormalIndeces = listOf(
+                    3, 3, 3
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     3, 4, 8
+                ),
+                vertexNormalIndeces = listOf(
+                    3, 3, 3
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     5, 7, 8
+                ),
+                vertexNormalIndeces = listOf(
+                    5, 5, 5
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     5, 8, 6
+                ),
+                vertexNormalIndeces = listOf(
+                    5, 5, 5
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     1, 5, 6
+                ),
+                vertexNormalIndeces = listOf(
+                    4, 4, 4
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     1, 6, 2
+                ),
+                vertexNormalIndeces = listOf(
+                    4, 4, 4
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     2, 6, 8
+                ),
+                vertexNormalIndeces = listOf(
+                    1, 1, 1
                 )
             ),
             FaceData(
                 vertexIndeces = listOf(
                     2, 8, 4
+                ),
+                vertexNormalIndeces = listOf(
+                    1, 1, 1
                 )
             )
+        ),
+        vertexNormals = listOf(
+            VertexNormalData(
+                0.0f,
+                0.0f,
+                1.0f,
+            ),
+            VertexNormalData(
+                0.0f,
+                0.0f,
+                -1.0f,
+            ),
+            VertexNormalData(
+                0.0f,
+                1.0f,
+                0.0f,
+            ),
+            VertexNormalData(
+                0.0f,
+                -1.0f,
+                0.0f,
+            ),
+            VertexNormalData(
+                1.0f,
+                0.0f,
+                0.0f,
+            ),
+            VertexNormalData(
+                -1.0f,
+                0.0f,
+                0.0f,
+            ),
         )
     )
 

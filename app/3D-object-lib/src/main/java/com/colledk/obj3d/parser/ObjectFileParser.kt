@@ -4,6 +4,7 @@ import android.content.Context
 import com.colledk.obj3d.parser.data.FaceData
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.parser.data.VertexData
+import com.colledk.obj3d.parser.data.VertexNormalData
 import timber.log.Timber
 import java.io.InputStream
 
@@ -33,6 +34,7 @@ internal class ObjectFileParser {
     private fun parseLines(lines: List<String>, scale: Int = 1): ObjectData{
         val vertices = mutableListOf<VertexData>()
         val faces = mutableListOf<FaceData>()
+        val vertexNormals = mutableListOf<VertexNormalData>()
 
         //
         lines.forEachIndexed { index, line ->
@@ -45,7 +47,6 @@ internal class ObjectFileParser {
                         3 -> { // When we have 3 inputs we exclude the w value
                             vertices.add(
                                 VertexData(
-                                    index = vertices.size + 1,
                                     x = vertexData[0] / scale,
                                     y = vertexData[1] / scale,
                                     z = vertexData[2] / scale,
@@ -55,7 +56,6 @@ internal class ObjectFileParser {
                         4 -> { // When we have 4 inputs from the line then we include the w value
                             vertices.add(
                                 VertexData(
-                                    index = vertices.size + 1,
                                     x = vertexData[0] / scale,
                                     y = vertexData[1] / scale,
                                     z = vertexData[2] / scale,
@@ -74,15 +74,44 @@ internal class ObjectFileParser {
                         Timber.d("Current line data for face includes /")
                         faces.add(
                             FaceData(
-                                vertexIndeces = lineData.map { it.value.split("/")[0].toInt() }
+                                vertexIndeces = lineData.map { it.value.split("/")[0].toInt() },
+                                vertexNormalIndeces = lineData.map { it.value.split("/")[2].toInt() }
                             )
                         )
                     } else {
                         faces.add(
                             FaceData(
-                                lineData.map { it.value.toInt() }
+                                vertexIndeces = lineData.map { it.value.toInt() }
                             )
                         )
+                    }
+                }
+                line.matches(VERTEX_NORMAL_REGEX) -> {
+                    val lineData = VERTEX_NORMAL_DATA_REGEX.findAll(line).toList()
+                    Timber.d("Current line data for vertex normal ${lineData.map { it.value }}")
+                    val vertexNormalData = lineData.map { it.value.toFloat() }
+
+                    when(vertexNormalData.size){
+                        3 -> {
+                            vertexNormals.add(
+                                VertexNormalData(
+                                    x = vertexNormalData[0],
+                                    y = vertexNormalData[1],
+                                    z = vertexNormalData[2],
+                                    null,
+                                )
+                            )
+                        }
+                        4 -> {
+                            vertexNormals.add(
+                                VertexNormalData(
+                                    x = vertexNormalData[0],
+                                    y = vertexNormalData[1],
+                                    z = vertexNormalData[2],
+                                    w = vertexNormalData[3],
+                                )
+                            )
+                        }
                     }
                 }
                 else -> {
@@ -91,10 +120,11 @@ internal class ObjectFileParser {
             }
         }
 
-        Timber.d("Retrieved data from file ${vertices.joinToString()}\n${faces.joinToString()}")
+        Timber.d("Retrieved data from file ${vertices.joinToString()}\n${faces.joinToString()}\n${vertexNormals.joinToString()}")
         return ObjectData(
             vertices = vertices,
-            faces = faces
+            faces = faces,
+            vertexNormals = vertexNormals
         )
     }
 
@@ -103,5 +133,7 @@ internal class ObjectFileParser {
         val VERTEX_DATA_REGEX = "[-+]?[0-9]+(.[0-9]+)?".toRegex()
         val FACE_REGEX = "f[ ]+([-+]?[0-9]*([ /])?)+".toRegex()
         val FACE_DATA_REGEX = "([-+]?[0-9]*([/]([-+]?[0-9])*)+|([-+]?[0-9])+)".toRegex()
+        val VERTEX_NORMAL_REGEX = "vn[ ]+([-+]?[0-9]+(.[0-9]+)?([ ]*)?){3,4}".toRegex()
+        val VERTEX_NORMAL_DATA_REGEX = "[-+]?[0-9]+(.[0-9]+)?".toRegex()
     }
 }
