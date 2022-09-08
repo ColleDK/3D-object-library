@@ -69,7 +69,23 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.setRotateM(rotationX, 0, xAngle, 0f, 1f, 0f)
         Matrix.setRotateM(rotationY, 0, yAngle, 1f, 0f, 0f)
 
+        // Find the center point
+        val maxX = data.vertices.maxOf { it.x }
+        val minX = data.vertices.minOf { it.x }
+        val centerX = (maxX - minX) / 2
+        val maxY = data.vertices.maxOf { it.y }
+        val minY = data.vertices.minOf { it.y }
+        val centerY = (maxY - minY) / 2
+        val maxZ = data.vertices.maxOf { it.z }
+        val minZ = data.vertices.minOf { it.z }
+        val centerZ = (maxZ - minZ) / 2
+
+        // Move the rotation point to the center
+        Matrix.translateM(rotationMatrix, 0, centerX, centerY, centerZ)
+        // Rotate the object
         Matrix.multiplyMM(rotationMatrix, 0, rotationX, 0, rotationY, 0)
+        // Move the rotation point back to the start point
+        Matrix.translateM(rotationMatrix, 0, -centerX, -centerY, -centerZ)
 
         // Get the current mvp matrix
         Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, rotationMatrix, 0)
