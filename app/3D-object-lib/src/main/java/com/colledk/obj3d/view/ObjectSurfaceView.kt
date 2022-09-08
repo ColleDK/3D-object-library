@@ -38,7 +38,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         resourceId: Int
     ) {
         // Load in the data from the parser
-        val data = ObjectFileParser().parseStream(context.resources.openRawResource(resourceId))
+        val data = ObjectFileParser().parseStream(context.resources.openRawResource(resourceId), scale = 50)
 
         // Set the data on the renderer
         renderer.data = data

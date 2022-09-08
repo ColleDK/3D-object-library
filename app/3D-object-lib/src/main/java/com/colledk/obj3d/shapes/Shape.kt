@@ -6,6 +6,7 @@ import com.colledk.obj3d.view.loadShader
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import java.nio.IntBuffer
 import java.nio.ShortBuffer
 
 internal class Shape(
@@ -13,9 +14,9 @@ internal class Shape(
 ) {
 
     private val color = floatArrayOf(
-        1.0f,
-        1.0f,
-        1.0f,
+        0.7f,
+        0.7f,
+        0.7f,
         1.0f,
     )
 
@@ -36,27 +37,27 @@ internal class Shape(
     }
 
     // Transform the object data faces to draworder
-    private val drawOrder: () -> ShortArray = {
-        val array = mutableListOf<Short>()
+    private val drawOrder: () -> IntArray = {
+        val array = mutableListOf<Int>()
 
         // Data retrieved from the file will be indexed from 1 to n but we index 0 to n-1
         // We will therefore need transform the data
         objectData.faces.forEach { face ->
             array.addAll(
-                face.vertexIndeces.map { (it - 1).toShort() }
+                face.vertexIndeces.map { it - 1 }
             )
         }
 
-        array.toShortArray()
+        array.toIntArray()
     }
 
     // Define our buffers for the coordinates and draworder
-    private val drawBuffer: ShortBuffer =
-        ByteBuffer.allocateDirect(drawOrder().size * ShapeUtil.SHORT.byteSize).run {
+    private val drawBuffer: IntBuffer =
+        ByteBuffer.allocateDirect(drawOrder().size * ShapeUtil.INT.byteSize).run {
             // Use Android's built in ordering
             order(ByteOrder.nativeOrder())
 
-            asShortBuffer().apply {
+            asIntBuffer().apply {
                 // Insert the draworder into the buffer
                 put(drawOrder())
 
@@ -101,6 +102,7 @@ internal class Shape(
                 "varying vec4 vColor;" +
                 "void main(){" +
                 "   vColor = aColor;" +
+                "   gl_PointSize = 10.0;" +
                 "   gl_Position = uMVPMatrix * aPosition;" +
                 "}"
 
@@ -175,7 +177,7 @@ internal class Shape(
         GLES20.glEnableVertexAttribArray(aPositionHandle)
 
         // Draw the shape
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder().size, GLES20.GL_UNSIGNED_SHORT, drawBuffer)
+        GLES20.glDrawElements(GLES20.GL_LINES, drawOrder().size, GLES20.GL_UNSIGNED_INT, drawBuffer)
 
         // Disable handles
         GLES20.glDisableVertexAttribArray(aPositionHandle)

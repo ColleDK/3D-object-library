@@ -12,6 +12,7 @@ import java.nio.ByteOrder
 import java.nio.IntBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.abs
 
 internal class ObjectRenderer : GLSurfaceView.Renderer {
     @Volatile
@@ -72,13 +73,15 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         // Find the center point
         val maxX = data.vertices.maxOf { it.x }
         val minX = data.vertices.minOf { it.x }
-        val centerX = (maxX - minX) / 2
+        val centerX = (abs(maxX) - abs(minX)) / 2
         val maxY = data.vertices.maxOf { it.y }
         val minY = data.vertices.minOf { it.y }
-        val centerY = (maxY - minY) / 2
+        val centerY = (abs(maxY) - abs(minY)) / 2
         val maxZ = data.vertices.maxOf { it.z }
         val minZ = data.vertices.minOf { it.z }
-        val centerZ = (maxZ - minZ) / 2
+        val centerZ = (abs(maxZ) - abs(minZ)) / 2
+
+        Timber.d("Center coordinates are {$centerX, $centerY, $centerZ}")
 
         // Move the rotation point to the center
         Matrix.translateM(rotationMatrix, 0, centerX, centerY, centerZ)
