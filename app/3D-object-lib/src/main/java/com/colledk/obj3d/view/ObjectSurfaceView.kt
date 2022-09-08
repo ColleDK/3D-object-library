@@ -35,10 +35,11 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * @param resourceId The resource id of the raw file containing the .obj file
      */
     fun loadObject(
-        resourceId: Int
+        resourceId: Int,
+        scale: Int = 1
     ) {
         // Load in the data from the parser
-        val data = ObjectFileParser().parseStream(context.resources.openRawResource(resourceId), scale = 50)
+        val data = ObjectFileParser().parseStream(context.resources.openRawResource(resourceId), scale = scale)
 
         // Set the data on the renderer
         renderer.data = data

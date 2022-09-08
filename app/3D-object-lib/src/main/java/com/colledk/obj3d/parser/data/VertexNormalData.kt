@@ -1,6 +1,6 @@
 package com.colledk.obj3d.parser.data
 
-internal data class VertexData(
+internal data class VertexNormalData(
     val x: Float,
     val y: Float,
     val z: Float,
