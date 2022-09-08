@@ -9,7 +9,7 @@ import java.io.InputStream
 
 internal class ObjectFileParser {
 
-    fun parseFile(fileId: Int, context: Context): ObjectData{
+    fun parseFile(fileId: Int, context: Context, scale: Int = 1): ObjectData{
         // Create an input stream from the raw resource
         val inputStream = context.resources.openRawResource(fileId)
 
@@ -21,16 +21,16 @@ internal class ObjectFileParser {
         return parseLines(lines = lines)
     }
 
-    fun parseStream(inputStream: InputStream): ObjectData{
+    fun parseStream(inputStream: InputStream, scale: Int = 1): ObjectData{
         // Retrieve the lines of the file
         val lines = mutableListOf<String>()
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
         // Get the object data from the parsed lines
-        return parseLines(lines = lines)
+        return parseLines(lines = lines, scale = scale)
     }
 
-    private fun parseLines(lines: List<String>): ObjectData{
+    private fun parseLines(lines: List<String>, scale: Int = 1): ObjectData{
         val vertices = mutableListOf<VertexData>()
         val faces = mutableListOf<FaceData>()
 
@@ -46,9 +46,9 @@ internal class ObjectFileParser {
                             vertices.add(
                                 VertexData(
                                     index = vertices.size + 1,
-                                    x = vertexData[0] / 50,
-                                    y = vertexData[1] / 50,
-                                    z = vertexData[2] / 50,
+                                    x = vertexData[0] / scale,
+                                    y = vertexData[1] / scale,
+                                    z = vertexData[2] / scale,
                                 )
                             )
                         }
@@ -56,10 +56,10 @@ internal class ObjectFileParser {
                             vertices.add(
                                 VertexData(
                                     index = vertices.size + 1,
-                                    x = vertexData[0],
-                                    y = vertexData[1],
-                                    z = vertexData[2],
-                                    w = vertexData[3],
+                                    x = vertexData[0] / scale,
+                                    y = vertexData[1] / scale,
+                                    z = vertexData[2] / scale,
+                                    w = vertexData[3] / scale,
                                 )
                             )
                         }

@@ -154,5 +154,4 @@ internal object MockedParserData {
             "f  1//4  6//4  2//4\n" +
             "f  2//1  6//1  8//1\n" +
             "f  2//1  8//1  4//1"
-
 }
