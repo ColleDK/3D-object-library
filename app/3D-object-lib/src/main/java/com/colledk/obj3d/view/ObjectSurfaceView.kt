@@ -106,6 +106,10 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
     override fun onTouchEvent(event: MotionEvent): Boolean {
         Timber.d("Handling new touch event")
         when(event.action){
+            MotionEvent.ACTION_DOWN -> {
+                previousX = event.x
+                previousY = event.y
+            }
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.x - previousX
                 val dy = event.y - previousY
