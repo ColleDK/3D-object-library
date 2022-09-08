@@ -46,9 +46,9 @@ internal class ObjectFileParser {
                             vertices.add(
                                 VertexData(
                                     index = vertices.size + 1,
-                                    x = vertexData[0],
-                                    y = vertexData[1],
-                                    z = vertexData[2],
+                                    x = vertexData[0] / 50,
+                                    y = vertexData[1] / 50,
+                                    z = vertexData[2] / 50,
                                 )
                             )
                         }
@@ -74,13 +74,13 @@ internal class ObjectFileParser {
                         Timber.d("Current line data for face includes /")
                         faces.add(
                             FaceData(
-                                vertexIndeces = lineData.map { it.value.split("/")[0].toShort() }
+                                vertexIndeces = lineData.map { it.value.split("/")[0].toInt() }
                             )
                         )
                     } else {
                         faces.add(
                             FaceData(
-                                lineData.map { it.value.toShort() }
+                                lineData.map { it.value.toInt() }
                             )
                         )
                     }
