@@ -11,8 +11,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         glView = ObjectSurfaceView(this).apply {
-            loadObject(R.raw.minicooper, scale = 45)
-            setBackgroundColor(floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f))
+            loadObject(R.raw.minicooper, scale = 40)
+            setBackgroundColor(floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f))
         }
 
         setContentView(glView)

@@ -44,6 +44,27 @@ internal class Shape(
         array.toFloatArray()
     }
 
+    private val vertexNormals: () -> FloatArray = {
+        val array = mutableListOf<Float>()
+
+        objectData.faces.forEach { face ->
+            face.vertexNormalIndeces?.let { indeces ->
+                indeces.forEach { index ->
+                    objectData.vertexNormals[index].let { normalData ->
+                        array.add(normalData.x)
+                        array.add(normalData.y)
+                        array.add(normalData.z)
+                        normalData.w?.let { w ->
+                            array.add(w)
+                        }
+                    }
+                }
+            }
+        }
+
+        array.toFloatArray()
+    }
+
     // Transform the object data faces to draworder
     private val drawOrder: () -> IntArray = {
         val array = mutableListOf<Int>()
@@ -52,7 +73,7 @@ internal class Shape(
         // We will therefore need transform the data
         objectData.faces.forEach { face ->
             array.addAll(
-                face.vertexIndeces.map { it - 1 }
+                face.vertexIndeces
             )
         }
 
@@ -80,6 +101,17 @@ internal class Shape(
 
             asFloatBuffer().apply {
                 put(coords())
+
+                position(0)
+            }
+        }
+
+    private val normalBuffer: FloatBuffer =
+        ByteBuffer.allocateDirect(vertexNormals().size * ShapeUtil.FLOAT.byteSize).run {
+            order(ByteOrder.nativeOrder())
+
+            asFloatBuffer().apply {
+                put(vertexNormals())
 
                 position(0)
             }
@@ -123,27 +155,48 @@ internal class Shape(
 
     // Create the shader code
     private val vertexShaderCode =
-                "uniform mat4 uMVPMatrix;" +
-                "attribute vec4 aPosition;" +
-                "attribute vec4 aColor;" +
-                "attribute vec4 aLightColor;" +
-                "varying vec4 vColor;" +
+        "" +
+                "uniform mat4 uMVPMatrix;" + // Model view projection matrix
+                "uniform mat4 uMVMatrix;" + // Model view matrix used to compute the fragment position
+                "" +
+                "attribute vec4 aPosition;" + // Per-vertex position
+                "attribute vec4 aColor;" + // Per-vertex color
+                "attribute vec4 aLightColor;" + // Per-vertex light color
+                "attribute vec3 aNormal;" + // The vertex normalized vector
+                "" +
+                "varying vec3 vPosition;" + // Position of the vertex
+                "varying vec4 vColor;" + // Color of the fragment
                 "varying vec4 vLightColor;" +
+                "varying vec3 vNormal;" + // Color of the light for the fragment
+                "" +
                 "void main(){" +
+                "   vPosition = vec3(uMVMatrix * aPosition);" +
                 "   vColor = aColor;" +
                 "   vLightColor = aLightColor;" +
+                "   vNormal = vec3(uMVMatrix * vec4(aNormal, 0.0));" +
                 "   gl_PointSize = 10.0;" +
                 "   gl_Position = uMVPMatrix * aPosition;" +
                 "}"
 
     private val fragmentShaderCode =
+        "" +
                 "precision mediump float;" +
+                "" +
+                "uniform vec3 uLightPosition;" +
+                "" +
+                "varying vec3 vPosition;" +
                 "varying vec4 vColor;" +
                 "varying vec4 vLightColor;" +
+                "varying vec3 vNormal;" +
+                "" +
                 "void main(){" +
+                "   float distance = length(uLightPosition - vPosition);" +
+                "   vec3 lightVector = normalize(uLightPosition - vPosition);" +
+                "   float diffuse = max(dot(vNormal, lightVector), 1.0);" +
+                "   diffuse = diffuse * (2.0 / (1.0 + (0.8 * distance * distance)));" +
                 "   float ambientStrength = 0.1;" +
                 "   vec4 ambient = ambientStrength * vLightColor;" +
-                "   gl_FragColor = ambient * vColor;" +
+                "   gl_FragColor = ambient * vColor + vColor * diffuse;" +
                 "}"
 
     // Initialize the program and attach shaders
@@ -165,20 +218,32 @@ internal class Shape(
     private var aPositionHandle: Int = 0
     private var aColorHandle: Int = 0
     private var aLightColorHandle: Int = 0
+    private var aNormalHandle: Int = 0
+
     private var uMvpHandle: Int = 0
+    private var uMvHandle: Int = 0
+    private var uLightPosHandle: Int = 0
 
     private val vertexCount: Int = coords().size / COORDS_PER_VERTEX
     private val vertexStride: Int = COORDS_PER_VERTEX * ShapeUtil.FLOAT.byteSize
     private val colorStride: Int = COORDS_PER_COLOR * ShapeUtil.FLOAT.byteSize
 
     // Create draw functionality
-    fun draw(mvpMatrix: FloatArray){
+    fun draw(mvpMatrix: FloatArray, mvMatrix: FloatArray, lightPosition: FloatArray){
         GLES20.glUseProgram(mProgram)
 
         // Apply projection matrix
         uMvpHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix")
 
         GLES20.glUniformMatrix4fv(uMvpHandle, 1, false, mvpMatrix, 0)
+
+        uMvHandle = GLES20.glGetUniformLocation(mProgram, "uMVMatrix")
+
+        GLES20.glUniformMatrix4fv(uMvHandle, 1, false, mvMatrix, 0)
+
+        uLightPosHandle = GLES20.glGetUniformLocation(mProgram, "uLightPosition")
+
+        GLES20.glUniform3fv(uLightPosHandle, 1, lightPosition, 0)
 
         // Load the color handle
         aColorHandle = GLES20.glGetAttribLocation(mProgram, "aColor")
@@ -218,7 +283,7 @@ internal class Shape(
             Timber.e("Light color handle error")
         }
 
-        // Prepare color data
+        // Prepare light color data
         GLES20.glVertexAttribPointer(
             aLightColorHandle,
             COORDS_PER_COLOR,
@@ -226,6 +291,22 @@ internal class Shape(
             false,
             colorStride,
             lightColorBuffer
+        )
+
+        // Load vertex normal handle
+        aNormalHandle = GLES20.glGetAttribLocation(mProgram, "aNormal")
+        if (aNormalHandle == -1){
+            Timber.e("Vertex normal handle error")
+        }
+
+        // Prepare the vertex normal data
+        GLES20.glVertexAttribPointer(
+            aNormalHandle,
+            COORDS_PER_VERTEX,
+            GLES20.GL_FLOAT,
+            false,
+            vertexStride,
+            normalBuffer
         )
 
         // Enable handles
