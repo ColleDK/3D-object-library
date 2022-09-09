@@ -56,6 +56,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
     override fun onDrawFrame(unused: GL10?) {
         val mvpMatrix = FloatArray(16)
+        val mvMatrix = FloatArray(16)
 
         // On every frame we clear the color and depth buffer so we don't use any data from previous frame
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
@@ -92,9 +93,15 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
         // Get the current mvp matrix
         Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, rotationMatrix, 0)
+        Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, rotationMatrix, 0)
 
         // Draw the object
-        shape.draw(mvpMatrix = mvpMatrix)
+        val lightPosition = floatArrayOf(
+            centerX,
+            centerY,
+            -5f
+        )
+        shape.draw(mvpMatrix = mvpMatrix, mvMatrix = mvMatrix, lightPosition = lightPosition)
     }
 
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {

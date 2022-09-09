@@ -53,87 +53,7 @@ internal object MockedParserData {
         faces = listOf(
             FaceData(
                 vertexIndeces = listOf(
-                    1, 7, 5
-                ),
-                vertexNormalIndeces = listOf(
-                    2, 2, 2
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    1, 3, 7
-                ),
-                vertexNormalIndeces = listOf(
-                    2, 2, 2
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    1, 4, 3
-                ),
-                vertexNormalIndeces = listOf(
-                    6, 6, 6
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    1, 2, 4
-                ),
-                vertexNormalIndeces = listOf(
-                    6, 6, 6
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    3, 8, 7
-                ),
-                vertexNormalIndeces = listOf(
-                    3, 3, 3
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    3, 4, 8
-                ),
-                vertexNormalIndeces = listOf(
-                    3, 3, 3
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    5, 7, 8
-                ),
-                vertexNormalIndeces = listOf(
-                    5, 5, 5
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    5, 8, 6
-                ),
-                vertexNormalIndeces = listOf(
-                    5, 5, 5
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    1, 5, 6
-                ),
-                vertexNormalIndeces = listOf(
-                    4, 4, 4
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    1, 6, 2
-                ),
-                vertexNormalIndeces = listOf(
-                    4, 4, 4
-                )
-            ),
-            FaceData(
-                vertexIndeces = listOf(
-                    2, 6, 8
+                    0, 6, 4
                 ),
                 vertexNormalIndeces = listOf(
                     1, 1, 1
@@ -141,10 +61,90 @@ internal object MockedParserData {
             ),
             FaceData(
                 vertexIndeces = listOf(
-                    2, 8, 4
+                    0, 2, 6
                 ),
                 vertexNormalIndeces = listOf(
                     1, 1, 1
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    0, 3, 2
+                ),
+                vertexNormalIndeces = listOf(
+                    5, 5, 5
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    0, 1, 3
+                ),
+                vertexNormalIndeces = listOf(
+                    5, 5, 5
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    2, 7, 6
+                ),
+                vertexNormalIndeces = listOf(
+                    2, 2, 2
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    2, 3, 7
+                ),
+                vertexNormalIndeces = listOf(
+                    2, 2, 2
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    4, 6, 7
+                ),
+                vertexNormalIndeces = listOf(
+                    4, 4, 4
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    4, 7, 5
+                ),
+                vertexNormalIndeces = listOf(
+                    4, 4, 4
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    0, 4, 5
+                ),
+                vertexNormalIndeces = listOf(
+                    3, 3, 3
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    0, 5, 1
+                ),
+                vertexNormalIndeces = listOf(
+                    3, 3, 3
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    1, 5, 7
+                ),
+                vertexNormalIndeces = listOf(
+                    0, 0, 0
+                )
+            ),
+            FaceData(
+                vertexIndeces = listOf(
+                    1, 7, 3
+                ),
+                vertexNormalIndeces = listOf(
+                    0, 0, 0
                 )
             )
         ),
