@@ -254,9 +254,9 @@ internal class ObjectFileParser {
     companion object{
         val VERTEX_REGEX = "v[ ]+([-+]?[0-9]+(.[0-9]+)?([ ]*)?){3,4}".toRegex()
         val VERTEX_DATA_REGEX = "[-+]?[0-9]+(.[0-9]+)?".toRegex()
-        val FACE_REGEX = "f[ ]+([-+]?[0-9]*([ /])?){3}".toRegex()
-        val FACE_DATA_REGEX = "([-+]?[0-9]*([/]([-+]?[0-9])*)+|([-+]?[0-9])+)".toRegex()
-        val FACE_REGEX_NOT_TRIANGULATED = "f[ ]+([-+]?[0-9]*([ /])?)+".toRegex()
+        val FACE_REGEX = "f[ ]+(\\d+([/]+\\d+)*[ ]*){3}".toRegex()
+        val FACE_REGEX_NOT_TRIANGULATED = "f[ ]+(\\d+([/]+\\d+)*[ ]*)+".toRegex()
+        val FACE_DATA_REGEX = "(\\d+([/]+\\d+)*)".toRegex()
         val VERTEX_NORMAL_REGEX = "vn[ ]+([-+]?[0-9]+(.[0-9]+)?([ ]*)?){3,4}".toRegex()
         val VERTEX_NORMAL_DATA_REGEX = "[-+]?[0-9]+(.[0-9]+)?".toRegex()
     }
