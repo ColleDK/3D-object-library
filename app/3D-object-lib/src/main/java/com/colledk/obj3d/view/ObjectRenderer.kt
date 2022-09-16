@@ -16,7 +16,7 @@ import kotlin.math.abs
 
 internal class ObjectRenderer : GLSurfaceView.Renderer {
     @Volatile
-    lateinit var data: ObjectData
+    var data: ObjectData? = null
 
     @Volatile
     var backgroundColor: FloatArray = floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f)
@@ -36,7 +36,8 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
     private val rotationY = FloatArray(16)
     private val rotationMatrix = FloatArray(16)
 
-    private lateinit var shape: Shape
+    private var renderUpdate: RenderUpdate = RenderUpdate()
+    private var shape: Shape? = null
 
     override fun onSurfaceCreated(unsued: GL10?, config: EGLConfig?) {
         // We set the background color
@@ -51,12 +52,39 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
 
         // Create the objects from the objectdata
-        shape = Shape(data)
+        data?.let {
+            shape = Shape(it)
+        }
     }
 
     override fun onDrawFrame(unused: GL10?) {
         val mvpMatrix = FloatArray(16)
         val mvMatrix = FloatArray(16)
+
+        // Update the background color
+        if (renderUpdate.shouldUpdateColor){
+            GLES20.glClearColor(
+                backgroundColor[0],
+                backgroundColor[1],
+                backgroundColor[2],
+                backgroundColor[3]
+            )
+            renderUpdate = RenderUpdate(
+                shouldUpdateColor = false,
+                shouldUpdateShape = renderUpdate.shouldUpdateShape
+            )
+        }
+
+        if (renderUpdate.shouldUpdateShape){
+            data?.let {
+                shape = Shape(it)
+            }
+
+            renderUpdate = RenderUpdate(
+                shouldUpdateColor = renderUpdate.shouldUpdateColor,
+                shouldUpdateShape = false
+            )
+        }
 
         // On every frame we clear the color and depth buffer so we don't use any data from previous frame
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
@@ -72,14 +100,14 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.setRotateM(rotationY, 0, yAngle, 1f, 0f, 0f)
 
         // Find the center point
-        val maxX = data.vertices.maxOf { it.x }
-        val minX = data.vertices.minOf { it.x }
+        val maxX = data?.vertices?.maxOf { it.x } ?: Float.MAX_VALUE
+        val minX = data?.vertices?.minOf { it.x } ?: Float.MIN_VALUE
         val centerX = (abs(maxX) - abs(minX)) / 2
-        val maxY = data.vertices.maxOf { it.y }
-        val minY = data.vertices.minOf { it.y }
+        val maxY = data?.vertices?.maxOf { it.y } ?: Float.MAX_VALUE
+        val minY = data?.vertices?.minOf { it.y } ?: Float.MIN_VALUE
         val centerY = (abs(maxY) - abs(minY)) / 2
-        val maxZ = data.vertices.maxOf { it.z }
-        val minZ = data.vertices.minOf { it.z }
+        val maxZ = data?.vertices?.maxOf { it.z } ?: Float.MAX_VALUE
+        val minZ = data?.vertices?.minOf { it.z } ?: Float.MIN_VALUE
         val centerZ = (abs(maxZ) - abs(minZ)) / 2
 
         Timber.d("Center coordinates are {$centerX, $centerY, $centerZ}")
@@ -101,7 +129,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             centerY,
             -5f
         )
-        shape.draw(mvpMatrix = mvpMatrix, mvMatrix = mvMatrix, lightPosition = lightPosition)
+        shape?.draw(mvpMatrix = mvpMatrix, mvMatrix = mvMatrix, lightPosition = lightPosition)
     }
 
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {
@@ -112,6 +140,21 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         val ratio = width.toFloat() / height.toFloat()
 
         Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 50f)
+    }
+
+    fun setObject(data: ObjectData){
+        this.data = data
+        renderUpdate = RenderUpdate(
+            shouldUpdateShape = true,
+            shouldUpdateColor = renderUpdate.shouldUpdateColor
+        )
+    }
+
+    fun setBackground(){
+        renderUpdate = RenderUpdate(
+            shouldUpdateColor = true,
+            shouldUpdateShape = renderUpdate.shouldUpdateShape
+        )
     }
 
 }

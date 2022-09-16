@@ -5,7 +5,8 @@ import com.colledk.obj3d.parser.data.FaceData
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.parser.data.VertexData
 import com.colledk.obj3d.parser.data.VertexNormalData
-import timber.log.Timber
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.InputStream
 import kotlin.math.acos
 import kotlin.math.pow
@@ -13,7 +14,7 @@ import kotlin.math.sqrt
 
 internal class ObjectFileParser {
 
-    fun parseFile(fileId: Int, context: Context, scale: Int = 1): ObjectData{
+    suspend fun parseFile(fileId: Int, context: Context, scale: Int = 1): ObjectData = withContext(Dispatchers.IO){
         // Create an input stream from the raw resource
         val inputStream = context.resources.openRawResource(fileId)
 
@@ -22,19 +23,19 @@ internal class ObjectFileParser {
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
         // Get the object data from the parsed lines
-        return parseLines(lines = lines)
+        return@withContext parseLines(lines = lines)
     }
 
-    fun parseStream(inputStream: InputStream, scale: Int = 1): ObjectData{
+    suspend fun parseStream(inputStream: InputStream, scale: Int = 1): ObjectData = withContext(Dispatchers.IO){
         // Retrieve the lines of the file
         val lines = mutableListOf<String>()
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
         // Get the object data from the parsed lines
-        return parseLines(lines = lines, scale = scale)
+        return@withContext parseLines(lines = lines, scale = scale)
     }
 
-    private fun parseLines(lines: List<String>, scale: Int = 1): ObjectData{
+    private suspend fun parseLines(lines: List<String>, scale: Int = 1): ObjectData = withContext(Dispatchers.IO){
         val vertices = mutableListOf<VertexData>()
         val faces = mutableListOf<FaceData>()
         val vertexNormals = mutableListOf<VertexNormalData>()
@@ -244,7 +245,7 @@ internal class ObjectFileParser {
                 else -> { /* Not a useful command so we move on */ }
             }
         }
-        return ObjectData(
+        return@withContext ObjectData(
             vertices = vertices,
             faces = faces,
             vertexNormals = vertexNormals
