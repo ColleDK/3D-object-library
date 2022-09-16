@@ -48,7 +48,6 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
-//    private var glView: ObjectSurfaceView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,7 +97,7 @@ class MainActivity : AppCompatActivity() {
                             loadingObjectCallback = {
                                 scope.launch {
                                     scaffoldState.snackbarHostState.showSnackbar(
-                                        "Loading object"
+                                        "Loading object $it"
                                     )
                                 }
                             }
@@ -176,13 +175,14 @@ fun ObjectChooser(
     scope: CoroutineScope,
     glView: ObjectSurfaceView? = null,
     modifier: Modifier = Modifier,
-    loadingObjectCallback: () -> Unit = {}
+    loadingObjectCallback: (name: String) -> Unit = {}
 ) {
-    val objects = listOf(
-        R.raw.building,
-        R.raw.human,
-        R.raw.minicooper,
-        R.raw.streetlamp
+    val objects = mapOf(
+        R.raw.building to "Building",
+        R.raw.human to "Human",
+        R.raw.minicooper to "Car",
+        R.raw.streetlamp to "Lamp",
+        R.raw.dragon to "Dragon",
     )
 
     val scales = listOf(
@@ -190,6 +190,7 @@ fun ObjectChooser(
         5,
         40,
         4,
+        5,
     )
 
     var objectIndex by remember {
@@ -205,11 +206,11 @@ fun ObjectChooser(
         // Left arrow button
         Button(
             onClick = {
-                loadingObjectCallback()
                 scope.launch {
                     objectIndex = (objectIndex - 1 + objects.size) % objects.size
+                    loadingObjectCallback(objects.values.elementAt(objectIndex))
                     glView?.loadObject(
-                        objects[objectIndex],
+                        objects.keys.elementAt(objectIndex),
                         scales[objectIndex % scales.size]
                     )
                 }
@@ -255,11 +256,12 @@ fun ObjectChooser(
         // Right arrow button
         Button(
             onClick = {
-                loadingObjectCallback()
                 scope.launch {
+                    objectIndex = (objectIndex + 1) % objects.size
+                    loadingObjectCallback(objects.values.elementAt(objectIndex))
                     glView?.loadObject(
-                        objects[++objectIndex % objects.size],
-                        scales[objectIndex % scales.size]
+                        objects.keys.elementAt(objectIndex),
+                        scales[objectIndex]
                     )
                 }
             },

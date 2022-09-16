@@ -192,8 +192,8 @@ internal class ObjectFileParser {
                                             ),
                                             vertexNormalIndeces = listOf(
                                                 it[(currentIndex - 1 + indexList.size) % indexList.size],
-                                                it[indexList[currentIndex]],
-                                                it[indexList[(currentIndex + 1) % indexList.size]],
+                                                it[currentIndex],
+                                                it[(currentIndex + 1) % indexList.size],
                                             )
                                         )
                                     )
