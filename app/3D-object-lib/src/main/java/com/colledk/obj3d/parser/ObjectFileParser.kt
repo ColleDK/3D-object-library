@@ -95,11 +95,17 @@ internal class ObjectFileParser {
                     val indeces = if (lineData.map { it.value }.all { it.contains("/") }){
                         // First we retrieve the indeces for the vertices
                         lineData.map { it.value.split("/")[0].toInt() - 1 }
-
-
                     } else {
                         // First we retrieve the indeces for the vertices
                         lineData.map { it.value.toInt() - 1 }
+                    }
+
+                    val normalIndeces: List<Int>? = if (lineData.map { it.value }.all { it.contains("/") }){
+                        // First we retrieve the indeces for the vertices
+                        lineData.map { it.value.split("/")[2].toInt() - 1 }
+                    } else {
+                        // First we retrieve the indeces for the vertices
+                        null
                     }
 
                     // Then we find the vertices that are used in the face
@@ -176,16 +182,32 @@ internal class ObjectFileParser {
                             // If no points are within the triangle that means we can triangulate the 3 vertices
                             if (notInTriangle){
                                 // We add the face draw order to the triangle list
-                                triangles.add(
-                                    indexList[(currentIndex - 1 + indexList.size) % indexList.size],
-                                )
-                                triangles.add(
-                                    indexList[currentIndex],
-                                )
-                                triangles.add(
-                                    indexList[(currentIndex + 1) % indexList.size],
-                                )
-
+                                normalIndeces?.let {
+                                    faces.add(
+                                        FaceData(
+                                            vertexIndeces = listOf(
+                                                indexList[(currentIndex - 1 + indexList.size) % indexList.size],
+                                                indexList[currentIndex],
+                                                indexList[(currentIndex + 1) % indexList.size],
+                                            ),
+                                            vertexNormalIndeces = listOf(
+                                                it[(currentIndex - 1 + indexList.size) % indexList.size],
+                                                it[indexList[currentIndex]],
+                                                it[indexList[(currentIndex + 1) % indexList.size]],
+                                            )
+                                        )
+                                    )
+                                } ?: run {
+                                    faces.add(
+                                        FaceData(
+                                            vertexIndeces = listOf(
+                                                indexList[(currentIndex - 1 + indexList.size) % indexList.size],
+                                                indexList[currentIndex],
+                                                indexList[(currentIndex + 1) % indexList.size],
+                                            )
+                                        )
+                                    )
+                                }
                                 // And remove the vertex that was used to triangulate
                                 indexList.removeAt(currentIndex)
                                 // Reset the list to find next triangulation
@@ -201,14 +223,7 @@ internal class ObjectFileParser {
                     }
 
                     // Once we only have 3 vertices left (single triangle) and completely triangulated the face
-                    // we add the data to the face list
-                    triangles.chunked(3).forEach { triangle ->
-                        faces.add(
-                            FaceData(
-                                vertexIndeces = triangle
-                            )
-                        )
-                    }
+                    // We add the last one
                     faces.add(
                         FaceData(
                             indexList
