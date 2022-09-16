@@ -2,19 +2,198 @@ package com.colledk.colle_3d_object_library
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.colledk.obj3d.view.ObjectSurfaceView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var glView: ObjectSurfaceView
+//    private var glView: ObjectSurfaceView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        glView = ObjectSurfaceView(this).apply {
-            loadObject(R.raw.building, scale = 15)
-            setBackgroundColor(floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f))
+        setContent {
+            var glView by remember{
+                mutableStateOf<ObjectSurfaceView?>(null)
+            }
+
+            val colors = listOf(
+                floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f),
+                floatArrayOf(1.0f, 0.0f, 0.0f, 1.0f),
+                floatArrayOf(0.0f, 1.0f, 0.0f, 1.0f),
+                floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f),
+            )
+
+            var backgroundColor by remember {
+                mutableStateOf(0)
+            }
+
+            val scope = rememberCoroutineScope()
+
+            Box {
+                AndroidView(factory = { ctx ->
+                    glView = ObjectSurfaceView(ctx).apply {
+                        scope.launch {
+                            loadObject(R.raw.building, scale = 15)
+                            setBackgroundColor(floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f))
+                        }
+                    }
+                    glView!!
+                })
+                Button(
+                    onClick = { glView?.setBackgroundColor(colors[(++backgroundColor % colors.size)]) },
+                    modifier = Modifier.align(Alignment.TopCenter)
+                ) {
+                    Text(text = "Change background color")
+                }
+
+
+                // Bottom object chooser
+                ObjectChooser(
+                    scope = scope,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(.7f)
+                        .height(IntrinsicSize.Max)
+                        .padding(PaddingValues(bottom = 15.dp)),
+                    glView = glView
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ObjectChooser(scope: CoroutineScope, glView: ObjectSurfaceView? = null, modifier: Modifier = Modifier) {
+    val objects = listOf(
+        R.raw.building,
+        R.raw.human,
+        R.raw.minicooper,
+        R.raw.streetlamp
+    )
+
+    val scales = listOf(
+        15,
+        5,
+        40,
+        4,
+    )
+
+    var objectIndex by remember {
+        mutableStateOf(0)
+    }
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+
+        // Left arrow button
+        Button(
+            onClick = {
+                scope.launch {
+                    objectIndex = (objectIndex - 1 + objects.size) % objects.size
+                    glView?.loadObject(
+                        objects[objectIndex],
+                        scales[objectIndex % scales.size]
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxHeight()
+                .border(
+                    1.dp,
+                    MaterialTheme.colors.onBackground,
+                    RoundedCornerShape(20.dp)
+                ),
+            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Image(
+                imageVector = Icons.Filled.KeyboardArrowLeft,
+                contentDescription = "Left arrow"
+            )
         }
 
-        setContentView(glView)
+        // Change object text
+        Box(
+            Modifier
+                .fillMaxHeight()
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colors.onBackground,
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .background(
+                    color = MaterialTheme.colors.background,
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(PaddingValues(horizontal = 15.dp))
+        ) {
+            Text(
+                text = "Change object",
+                modifier = Modifier.align(Alignment.Center),
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        // Right arrow button
+        Button(
+            onClick = {
+                scope.launch {
+                    glView?.loadObject(
+                        objects[++objectIndex % objects.size],
+                        scales[objectIndex % scales.size]
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxHeight()
+                .border(
+                    1.dp,
+                    MaterialTheme.colors.onBackground,
+                    RoundedCornerShape(20.dp)
+                ),
+            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Image(
+                imageVector = Icons.Filled.KeyboardArrowRight,
+                contentDescription = "Right arrow"
+            )
+        }
     }
 }

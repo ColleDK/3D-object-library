@@ -34,7 +34,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * Function for loading a 3D object from a raw resource
      * @param resourceId The resource id of the raw file containing the .obj file
      */
-    fun loadObject(
+    suspend fun loadObject(
         resourceId: Int,
         scale: Int = 1
     ) {
@@ -42,9 +42,9 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         val data = ObjectFileParser().parseStream(context.resources.openRawResource(resourceId), scale = scale)
 
         // Set the data on the renderer
-        renderer.data = data
+        renderer.setObject(data = data)
         // Update the view with the new data
-        requestRender()
+        renderObject()
     }
 
     /**
@@ -70,6 +70,8 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                 1.0f,
             )
         }
+        renderer.setBackground()
+        renderObject()
     }
 
     /**
@@ -101,6 +103,8 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                 renderer.backgroundColor = floatArrayOf(color[0], color[1], color[2], color[3])
             }
         }
+        renderer.setBackground()
+        renderObject()
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -120,10 +124,14 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                 previousX = event.x
                 previousY = event.y
 
-                requestRender()
+                renderObject()
             }
         }
 
         return true
+    }
+
+    private fun renderObject(){
+        requestRender()
     }
 }

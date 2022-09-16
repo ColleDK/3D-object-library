@@ -1,5 +1,6 @@
 package com.colledk.obj3d.parser
 
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -11,7 +12,9 @@ class ParserUnitTest {
     fun parseFileVertices(){
         val stream = MockedParserData.objectDataString.byteInputStream()
 
-        val data = ObjectFileParser().parseStream(stream)
+        val data = runBlocking {
+            ObjectFileParser().parseStream(stream)
+        }
 
         assert(data.vertices == MockedParserData.parsedData.vertices)
         //assert(data.vertices.size == 8)
@@ -22,7 +25,9 @@ class ParserUnitTest {
     fun parseFileFaces(){
         val stream = MockedParserData.objectDataString.byteInputStream()
 
-        val data = ObjectFileParser().parseStream(stream)
+        val data = runBlocking {
+            ObjectFileParser().parseStream(stream)
+        }
 
         assert(data.faces == MockedParserData.parsedData.faces)
         //assert(data.faces.size == 12)
