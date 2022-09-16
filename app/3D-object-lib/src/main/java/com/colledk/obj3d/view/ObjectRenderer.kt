@@ -27,6 +27,9 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
     @Volatile
     var yAngle: Float = 0f
 
+    @Volatile
+    var lightIntensity: Float = 1f
+
     // Define our matrices in a 4D spectrum (4x4)
     private val projectionMatrix = FloatArray(16)
     private val viewMatrix = FloatArray(16)
@@ -129,7 +132,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             centerY,
             -5f
         )
-        shape?.draw(mvpMatrix = mvpMatrix, mvMatrix = mvMatrix, lightPosition = lightPosition)
+        shape?.draw(mvpMatrix = mvpMatrix, mvMatrix = mvMatrix, lightPosition = lightPosition, lightIntensity = lightIntensity)
     }
 
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {
