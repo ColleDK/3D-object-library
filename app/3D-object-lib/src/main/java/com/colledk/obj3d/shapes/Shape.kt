@@ -183,6 +183,7 @@ internal class Shape(
                 "precision mediump float;" +
                 "" +
                 "uniform vec3 uLightPosition;" +
+                "uniform float uLightIntensity;" +
                 "" +
                 "varying vec3 vPosition;" +
                 "varying vec4 vColor;" +
@@ -193,7 +194,7 @@ internal class Shape(
                 "   float distance = length(uLightPosition - vPosition);" +
                 "   vec3 lightVector = normalize(uLightPosition - vPosition);" +
                 "   float diffuse = max(dot(vNormal, lightVector), 1.0);" +
-                "   diffuse = diffuse * (2.0 / (1.0 + (0.8 * distance * distance)));" +
+                "   diffuse = diffuse * (uLightIntensity / (1.0 + (0.8 * distance * distance)));" +
                 "   float ambientStrength = 0.1;" +
                 "   vec4 ambient = ambientStrength * vLightColor;" +
                 "   gl_FragColor = ambient * vColor + vColor * diffuse;" +
@@ -223,13 +224,14 @@ internal class Shape(
     private var uMvpHandle: Int = 0
     private var uMvHandle: Int = 0
     private var uLightPosHandle: Int = 0
+    private var uLightIntensityHandle: Int = 0
 
     private val vertexCount: Int = coords().size / COORDS_PER_VERTEX
     private val vertexStride: Int = COORDS_PER_VERTEX * ShapeUtil.FLOAT.byteSize
     private val colorStride: Int = COORDS_PER_COLOR * ShapeUtil.FLOAT.byteSize
 
     // Create draw functionality
-    fun draw(mvpMatrix: FloatArray, mvMatrix: FloatArray, lightPosition: FloatArray){
+    fun draw(mvpMatrix: FloatArray, mvMatrix: FloatArray, lightPosition: FloatArray, lightIntensity: Float){
         GLES20.glUseProgram(mProgram)
 
         // Apply projection matrix
@@ -244,6 +246,10 @@ internal class Shape(
         uLightPosHandle = GLES20.glGetUniformLocation(mProgram, "uLightPosition")
 
         GLES20.glUniform3fv(uLightPosHandle, 1, lightPosition, 0)
+
+        uLightIntensityHandle = GLES20.glGetUniformLocation(mProgram, "uLightIntensity")
+
+        GLES20.glUniform1f(uLightIntensityHandle, lightIntensity * 5f)
 
         // Load the color handle
         aColorHandle = GLES20.glGetAttribLocation(mProgram, "aColor")

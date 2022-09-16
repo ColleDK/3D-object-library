@@ -107,6 +107,15 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         renderObject()
     }
 
+    /**
+     * Function for setting the intensity of the directional light
+     * @param intensity The intensity of the background as [Float] between 0 and 1.
+     */
+    fun setLightIntensity(intensity: Float){
+        renderer.lightIntensity = intensity
+        renderObject()
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         Timber.d("Handling new touch event")
         when(event.action){

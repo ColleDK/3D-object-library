@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,14 +16,21 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Slider
+import androidx.compose.material.SliderDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +45,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.colledk.obj3d.view.ObjectSurfaceView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 //    private var glView: ObjectSurfaceView? = null
@@ -45,58 +54,130 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            var glView by remember{
+            var glView by remember {
                 mutableStateOf<ObjectSurfaceView?>(null)
             }
 
-            val colors = listOf(
-                floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f),
-                floatArrayOf(1.0f, 0.0f, 0.0f, 1.0f),
-                floatArrayOf(0.0f, 1.0f, 0.0f, 1.0f),
-                floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f),
-            )
-
-            var backgroundColor by remember {
-                mutableStateOf(0)
-            }
-
             val scope = rememberCoroutineScope()
+            val scaffoldState = rememberScaffoldState()
 
-            Box {
-                AndroidView(factory = { ctx ->
-                    glView = ObjectSurfaceView(ctx).apply {
-                        scope.launch {
-                            loadObject(R.raw.building, scale = 15)
-                            setBackgroundColor(floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f))
+            Scaffold(scaffoldState = scaffoldState) { padding ->
+                Box(modifier = Modifier.padding(paddingValues = padding)) {
+                    AndroidView(factory = { ctx ->
+                        glView = ObjectSurfaceView(ctx).apply {
+                            scope.launch {
+                                loadObject(R.raw.building, scale = 15)
+                                setBackgroundColor(floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f))
+                            }
                         }
+                        glView!!
+                    })
+
+                    ColorChooser(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .height(IntrinsicSize.Max)
+                            .padding(PaddingValues(top = 15.dp)),
+                        glView = glView
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth(1f), horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        IntensityChooser(glView = glView)
+                        // Bottom object chooser
+                        ObjectChooser(
+                            scope = scope,
+                            modifier = Modifier
+                                .fillMaxWidth(.7f)
+                                .height(IntrinsicSize.Max)
+                                .padding(PaddingValues(bottom = 15.dp)),
+                            glView = glView,
+                            loadingObjectCallback = {
+                                scope.launch {
+                                    scaffoldState.snackbarHostState.showSnackbar(
+                                        "Loading object"
+                                    )
+                                }
+                            }
+                        )
                     }
-                    glView!!
-                })
-                Button(
-                    onClick = { glView?.setBackgroundColor(colors[(++backgroundColor % colors.size)]) },
-                    modifier = Modifier.align(Alignment.TopCenter)
-                ) {
-                    Text(text = "Change background color")
                 }
 
-
-                // Bottom object chooser
-                ObjectChooser(
-                    scope = scope,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth(.7f)
-                        .height(IntrinsicSize.Max)
-                        .padding(PaddingValues(bottom = 15.dp)),
-                    glView = glView
-                )
             }
         }
     }
 }
 
 @Composable
-fun ObjectChooser(scope: CoroutineScope, glView: ObjectSurfaceView? = null, modifier: Modifier = Modifier) {
+fun ColorChooser(glView: ObjectSurfaceView? = null, modifier: Modifier = Modifier) {
+    val colorNames = mapOf(
+        floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f) to "Cyan",
+        floatArrayOf(1.0f, 0.0f, 0.0f, 1.0f) to "Red",
+        floatArrayOf(0.0f, 1.0f, 0.0f, 1.0f) to "Green",
+        floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f) to "White",
+    )
+
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+        colorNames.toList().forEach { (color, colorName) ->
+            Button(
+                onClick = { glView?.setBackgroundColor(color) },
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .border(
+                        1.dp,
+                        MaterialTheme.colors.onBackground,
+                        RoundedCornerShape(20.dp)
+                    ),
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Text(text = colorName)
+            }
+        }
+    }
+}
+
+@Composable
+fun IntensityChooser(glView: ObjectSurfaceView? = null) {
+    var sliderPosition by remember {
+        mutableStateOf(1f)
+    }
+
+    Box(
+        modifier = Modifier
+            .border(1.dp, MaterialTheme.colors.onBackground, RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colors.background, RoundedCornerShape(20.dp))
+            .padding(PaddingValues(horizontal = 15.dp, vertical = 5.dp))
+    ) {
+        Text(
+            text = "Light intensity: " + "%.2f".format(sliderPosition),
+            modifier = Modifier.align(Alignment.Center),
+            textAlign = TextAlign.Center
+        )
+    }
+    Slider(
+        value = sliderPosition, onValueChange = {
+            sliderPosition = it
+            glView?.setLightIntensity(sliderPosition)
+        },
+        colors = SliderDefaults.colors(
+            thumbColor = MaterialTheme.colors.onBackground,
+            activeTrackColor = MaterialTheme.colors.onBackground,
+            inactiveTrackColor = MaterialTheme.colors.background.copy(alpha = 0.7f)
+        )
+    )
+}
+
+@Composable
+fun ObjectChooser(
+    scope: CoroutineScope,
+    glView: ObjectSurfaceView? = null,
+    modifier: Modifier = Modifier,
+    loadingObjectCallback: () -> Unit = {}
+) {
     val objects = listOf(
         R.raw.building,
         R.raw.human,
@@ -124,6 +205,7 @@ fun ObjectChooser(scope: CoroutineScope, glView: ObjectSurfaceView? = null, modi
         // Left arrow button
         Button(
             onClick = {
+                loadingObjectCallback()
                 scope.launch {
                     objectIndex = (objectIndex - 1 + objects.size) % objects.size
                     glView?.loadObject(
@@ -173,6 +255,7 @@ fun ObjectChooser(scope: CoroutineScope, glView: ObjectSurfaceView? = null, modi
         // Right arrow button
         Button(
             onClick = {
+                loadingObjectCallback()
                 scope.launch {
                     glView?.loadObject(
                         objects[++objectIndex % objects.size],
