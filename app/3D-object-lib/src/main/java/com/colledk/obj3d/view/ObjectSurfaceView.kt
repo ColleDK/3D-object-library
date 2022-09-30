@@ -6,6 +6,9 @@ import android.opengl.GLSurfaceView
 import android.os.Build
 import android.view.MotionEvent
 import com.colledk.obj3d.parser.ObjectFileParser
+import com.colledk.obj3d.parser.data.ObjectData
+import com.colledk.obj3d.parser.data.VertexData
+import com.colledk.obj3d.parser.data.VertexNormalData
 import timber.log.Timber
 
 private const val TOUCH_SCALE_FACTOR = 180f / 1000f
@@ -36,10 +39,11 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      */
     suspend fun loadObject(
         resourceId: Int,
-        scale: Int = 1
+        scale: Int = 1,
+        onFinish: () -> Unit = {}
     ) {
         // Load in the data from the parser
-        val data = ObjectFileParser().parseStream(context.resources.openRawResource(resourceId), scale = scale)
+        val data = ObjectFileParser().parseStream(context.resources.openRawResource(resourceId), scale = scale, onFinish = onFinish)
 
         // Set the data on the renderer
         renderer.setObject(data = data)

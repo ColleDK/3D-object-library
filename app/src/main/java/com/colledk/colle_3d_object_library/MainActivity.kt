@@ -16,9 +16,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -65,7 +62,13 @@ class MainActivity : AppCompatActivity() {
                     AndroidView(factory = { ctx ->
                         glView = ObjectSurfaceView(ctx).apply {
                             scope.launch {
-                                loadObject(R.raw.building, scale = 15)
+                                loadObject(R.raw.dragon, scale = 5, onFinish = {
+                                    scope.launch {
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            "Loaded object cube"
+                                        )
+                                    }
+                                })
                                 setBackgroundColor(floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f))
                             }
                         }
@@ -98,6 +101,13 @@ class MainActivity : AppCompatActivity() {
                                 scope.launch {
                                     scaffoldState.snackbarHostState.showSnackbar(
                                         "Loading object $it"
+                                    )
+                                }
+                            },
+                            onFinishLoading = {
+                                scope.launch {
+                                    scaffoldState.snackbarHostState.showSnackbar(
+                                        "Finished loading object $it"
                                     )
                                 }
                             }
@@ -175,7 +185,8 @@ fun ObjectChooser(
     scope: CoroutineScope,
     glView: ObjectSurfaceView? = null,
     modifier: Modifier = Modifier,
-    loadingObjectCallback: (name: String) -> Unit = {}
+    loadingObjectCallback: (name: String) -> Unit = {},
+    onFinishLoading: (name: String) -> Unit = {}
 ) {
     val objects = mapOf(
         R.raw.building to "Building",
@@ -212,7 +223,7 @@ fun ObjectChooser(
                     glView?.loadObject(
                         objects.keys.elementAt(objectIndex),
                         scales[objectIndex % scales.size]
-                    )
+                    ) { onFinishLoading(objects.values.elementAt(objectIndex)) }
                 }
             },
             modifier = Modifier

@@ -37,7 +37,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
     private val rotationX = FloatArray(16)
     private val rotationY = FloatArray(16)
-    private val rotationMatrix = FloatArray(16)
+    private val modelMatrix = FloatArray(16)
 
     private var renderUpdate: RenderUpdate = RenderUpdate()
     private var shape: Shape? = null
@@ -113,26 +113,32 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         val minZ = data?.vertices?.minOf { it.z } ?: Float.MIN_VALUE
         val centerZ = (abs(maxZ) - abs(minZ)) / 2
 
-        Timber.d("Center coordinates are {$centerX, $centerY, $centerZ}")
-
+        Matrix.setIdentityM(modelMatrix, 0)
         // Move the rotation point to the center
-        Matrix.translateM(rotationMatrix, 0, centerX, centerY, centerZ)
+        Matrix.translateM(modelMatrix, 0, centerX, centerY, centerZ)
         // Rotate the object
-        Matrix.multiplyMM(rotationMatrix, 0, rotationX, 0, rotationY, 0)
+        Matrix.multiplyMM(modelMatrix, 0, rotationX, 0, rotationY, 0)
+
         // Move the rotation point back to the start point
-        Matrix.translateM(rotationMatrix, 0, -centerX, -centerY, -centerZ)
+        Matrix.translateM(modelMatrix, 0, -centerX, -centerY, -centerZ)
 
         // Get the current mvp matrix
-        Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, rotationMatrix, 0)
-        Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, rotationMatrix, 0)
+        Matrix.multiplyMM(mvpMatrix, 0, vpMatrix, 0, modelMatrix, 0)
+        Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, modelMatrix, 0)
+
+        val inverseModelView = FloatArray(16)
+        Matrix.invertM(inverseModelView, 0, mvMatrix, 0)
+
+        val normalMatrix = FloatArray(16)
+        Matrix.transposeM(normalMatrix, 0, inverseModelView, 0)
 
         // Draw the object
-        val lightPosition = floatArrayOf(
-            centerX,
-            centerY,
-            -5f
+        shape?.draw(
+            modelMatrix = modelMatrix,
+            viewMatrix = viewMatrix,
+            projectionMatrix = projectionMatrix,
+            normalMatrix = normalMatrix
         )
-        shape?.draw(mvpMatrix = mvpMatrix, mvMatrix = mvMatrix, lightPosition = lightPosition, lightIntensity = lightIntensity)
     }
 
     override fun onSurfaceChanged(unused: GL10?, width: Int, height: Int) {
@@ -187,7 +193,8 @@ internal fun loadShader(type: Int, shaderCode: String): Int {
             }
             else -> {
                 // Something went wrong when compiling the shader
-                Timber.e("Error loading shader $shaderCode")
+                val error = GLES20.glGetShaderInfoLog(shader)
+                Timber.e("Shader error $error")
             }
         }
     }
