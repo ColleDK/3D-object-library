@@ -14,7 +14,7 @@ import kotlin.math.sqrt
 
 internal class ObjectFileParser {
 
-    suspend fun parseFile(fileId: Int, context: Context, scale: Int = 1): ObjectData = withContext(Dispatchers.IO){
+    suspend fun parseFile(fileId: Int, context: Context, scale: Int = 1, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO){
         // Create an input stream from the raw resource
         val inputStream = context.resources.openRawResource(fileId)
 
@@ -23,19 +23,19 @@ internal class ObjectFileParser {
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
         // Get the object data from the parsed lines
-        return@withContext parseLines(lines = lines)
+        return@withContext parseLines(lines = lines, onFinish = onFinish)
     }
 
-    suspend fun parseStream(inputStream: InputStream, scale: Int = 1): ObjectData = withContext(Dispatchers.IO){
+    suspend fun parseStream(inputStream: InputStream, scale: Int = 1, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO){
         // Retrieve the lines of the file
         val lines = mutableListOf<String>()
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
         // Get the object data from the parsed lines
-        return@withContext parseLines(lines = lines, scale = scale)
+        return@withContext parseLines(lines = lines, scale = scale, onFinish = onFinish)
     }
 
-    private suspend fun parseLines(lines: List<String>, scale: Int = 1): ObjectData = withContext(Dispatchers.IO){
+    private suspend fun parseLines(lines: List<String>, scale: Int = 1, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO){
         val vertices = mutableListOf<VertexData>()
         val faces = mutableListOf<FaceData>()
         val vertexNormals = mutableListOf<VertexNormalData>()
@@ -100,9 +100,9 @@ internal class ObjectFileParser {
                         lineData.map { it.value.toInt() - 1 }
                     }
 
-                    val normalIndeces: List<Int>? = if (lineData.map { it.value }.all { it.contains("/") }){
+                    val normalIndeces: MutableList<Int>? = if (lineData.map { it.value }.all { it.contains("/") }){
                         // First we retrieve the indeces for the vertices
-                        lineData.map { it.value.split("/")[2].toInt() - 1 }
+                        lineData.map { it.value.split("/")[2].toInt() - 1 }.toMutableList()
                     } else {
                         // First we retrieve the indeces for the vertices
                         null
@@ -210,6 +210,7 @@ internal class ObjectFileParser {
                                 }
                                 // And remove the vertex that was used to triangulate
                                 indexList.removeAt(currentIndex)
+                                normalIndeces?.removeAt(currentIndex)
                                 // Reset the list to find next triangulation
                                 currentIndex = 0
                             } else {
@@ -264,7 +265,7 @@ internal class ObjectFileParser {
             vertices = vertices,
             faces = faces,
             vertexNormals = vertexNormals
-        )
+        ).also { onFinish() }
     }
 
     companion object{
