@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
                     AndroidView(factory = { ctx ->
                         glView = ObjectSurfaceView(ctx).apply {
                             scope.launch {
-                                loadObject(R.raw.dragon, scale = 5, onFinish = {
+                                loadObject(R.raw.building, scale = 15, onFinish = {
                                     scope.launch {
                                         scaffoldState.snackbarHostState.showSnackbar(
                                             "Loaded object cube"
@@ -83,12 +83,13 @@ class MainActivity : AppCompatActivity() {
                         glView = glView
                     )
 
+                    IntensityChooser(glView = glView, modifier = Modifier.fillMaxWidth(.3f).align(Alignment.CenterStart))
+
                     Column(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth(1f), horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        IntensityChooser(glView = glView)
                         // Bottom object chooser
                         ObjectChooser(
                             scope = scope,
@@ -150,34 +151,90 @@ fun ColorChooser(glView: ObjectSurfaceView? = null, modifier: Modifier = Modifie
 }
 
 @Composable
-fun IntensityChooser(glView: ObjectSurfaceView? = null) {
-    var sliderPosition by remember {
+fun IntensityChooser(glView: ObjectSurfaceView? = null, modifier: Modifier = Modifier) {
+    var sliderPosX by remember {
         mutableStateOf(1f)
     }
 
-    Box(
-        modifier = Modifier
-            .border(1.dp, MaterialTheme.colors.onBackground, RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colors.background, RoundedCornerShape(20.dp))
-            .padding(PaddingValues(horizontal = 15.dp, vertical = 5.dp))
-    ) {
-        Text(
-            text = "Light intensity: " + "%.2f".format(sliderPosition),
-            modifier = Modifier.align(Alignment.Center),
-            textAlign = TextAlign.Center
+    var sliderPosY by remember {
+        mutableStateOf(1f)
+    }
+
+    var sliderPosZ by remember {
+        mutableStateOf(1f)
+    }
+
+    Column(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .border(1.dp, MaterialTheme.colors.onBackground, RoundedCornerShape(20.dp))
+                .background(MaterialTheme.colors.background, RoundedCornerShape(20.dp))
+                .padding(PaddingValues(horizontal = 15.dp, vertical = 5.dp))
+        ) {
+            Text(
+                text = "Light position x: " + "%.2f".format(sliderPosX),
+                modifier = Modifier.align(Alignment.Center),
+                textAlign = TextAlign.Center
+            )
+        }
+        Slider(
+            value = sliderPosX, onValueChange = {
+                sliderPosX = it
+                glView?.setLightPosition(x = sliderPosX, y = sliderPosY, z = sliderPosZ)
+            },
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colors.onBackground,
+                activeTrackColor = MaterialTheme.colors.onBackground,
+                inactiveTrackColor = MaterialTheme.colors.background.copy(alpha = 0.7f)
+            )
+        )
+        Box(
+            modifier = Modifier
+                .border(1.dp, MaterialTheme.colors.onBackground, RoundedCornerShape(20.dp))
+                .background(MaterialTheme.colors.background, RoundedCornerShape(20.dp))
+                .padding(PaddingValues(horizontal = 15.dp, vertical = 5.dp))
+        ) {
+            Text(
+                text = "Light position y: " + "%.2f".format(sliderPosY),
+                modifier = Modifier.align(Alignment.Center),
+                textAlign = TextAlign.Center
+            )
+        }
+        Slider(
+            value = sliderPosY, onValueChange = {
+                sliderPosY = it
+                glView?.setLightPosition(x = sliderPosX, y = sliderPosY, z = sliderPosZ)
+            },
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colors.onBackground,
+                activeTrackColor = MaterialTheme.colors.onBackground,
+                inactiveTrackColor = MaterialTheme.colors.background.copy(alpha = 0.7f)
+            )
+        )
+        Box(
+            modifier = Modifier
+                .border(1.dp, MaterialTheme.colors.onBackground, RoundedCornerShape(20.dp))
+                .background(MaterialTheme.colors.background, RoundedCornerShape(20.dp))
+                .padding(PaddingValues(horizontal = 15.dp, vertical = 5.dp))
+        ) {
+            Text(
+                text = "Light position z: " + "%.2f".format(sliderPosZ),
+                modifier = Modifier.align(Alignment.Center),
+                textAlign = TextAlign.Center
+            )
+        }
+        Slider(
+            value = sliderPosZ, onValueChange = {
+                sliderPosZ = it
+                glView?.setLightPosition(x = sliderPosX, y = sliderPosY, z = sliderPosZ)
+            },
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colors.onBackground,
+                activeTrackColor = MaterialTheme.colors.onBackground,
+                inactiveTrackColor = MaterialTheme.colors.background.copy(alpha = 0.7f)
+            )
         )
     }
-    Slider(
-        value = sliderPosition, onValueChange = {
-            sliderPosition = it
-            glView?.setLightIntensity(sliderPosition)
-        },
-        colors = SliderDefaults.colors(
-            thumbColor = MaterialTheme.colors.onBackground,
-            activeTrackColor = MaterialTheme.colors.onBackground,
-            inactiveTrackColor = MaterialTheme.colors.background.copy(alpha = 0.7f)
-        )
-    )
 }
 
 @Composable

@@ -112,11 +112,13 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     /**
-     * Function for setting the intensity of the directional light
-     * @param intensity The intensity of the background as [Float] between 0 and 1.
+     * Function for setting the position of the lighting.
+     * @param x x coordinate of the position as [Float]
+     * @param y y coordinate of the position as [Float]
+     * @param z z coordinate of the position as [Float]
      */
-    fun setLightIntensity(intensity: Float){
-        renderer.lightIntensity = intensity
+    fun setLightPosition(x: Float, y: Float, z: Float){
+        renderer.lightPosition = floatArrayOf(x, y, z)
         renderObject()
     }
 

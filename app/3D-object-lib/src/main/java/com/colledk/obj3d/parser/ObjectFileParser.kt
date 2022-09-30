@@ -90,7 +90,6 @@ internal class ObjectFileParser {
                 line.matches(FACE_REGEX_NOT_TRIANGULATED) -> { // When a face has n >= 4 vertices then we need to triangulate the polygon
                     // First we retrieve the data from the line
                     val lineData = FACE_DATA_REGEX.findAll(line).toList()
-                    val triangles = mutableListOf<Int>()
 
                     val indeces = if (lineData.map { it.value }.all { it.contains("/") }){
                         // First we retrieve the indeces for the vertices
@@ -124,22 +123,14 @@ internal class ObjectFileParser {
 
                         // Check if the vertex is convex (interior angle is less than π radian)
                         // Define two vectors AB AC
-                        val vector1 = floatArrayOf(
-                            curr.x - prev.x, //x
-                            curr.y - prev.y, // y
-                            curr.z - prev.z // z
-                        )
+                        val vector1 = curr - prev
 
-                        val vector2 = floatArrayOf(
-                            curr.x - next.x, //x
-                            curr.y - next.y, // y
-                            curr.z - next.z // z
-                        )
+                        val vector2 = curr - next
 
                         // Calculate the inner angle of the vertex A between B and C
-                        val dot = vector1[0] * vector2[0] + vector1[1] * vector2[1] + vector1[2] * vector2[2]
-                        val length1 = sqrt(vector1[0].toDouble().pow(2) + vector1[1].toDouble().pow(2) + vector1[2].toDouble().pow(2))
-                        val length2 = sqrt(vector2[0].toDouble().pow(2) + vector2[1].toDouble().pow(2) + vector2[2].toDouble().pow(2))
+                        val dot = vector1.x * vector2.x + vector1.y * vector2.y + vector1.y * vector2.y
+                        val length1 = sqrt(vector1.x.toDouble().pow(2) + vector1.y.toDouble().pow(2) + vector1.z.toDouble().pow(2))
+                        val length2 = sqrt(vector2.x.toDouble().pow(2) + vector2.y.toDouble().pow(2) + vector2.z.toDouble().pow(2))
                         val theta = dot.toDouble() / (length1 * length2)
 
                         val angle = Math.toDegrees(
@@ -227,7 +218,8 @@ internal class ObjectFileParser {
                     // We add the last one
                     faces.add(
                         FaceData(
-                            indexList
+                            indexList,
+                            normalIndeces
                         )
                     )
                 }

@@ -133,7 +133,7 @@ internal class Shape(
                 "varying vec3 vNormal;" +
                 "" +
                 "void main(){" +
-                "   vNormal = mat3(uNormalMatrix) * aNormal;" +
+                "   vNormal = (uViewMatrix * uModelMatrix * vec4(aNormal, 0.0)).xyz;" +
                 "   gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);" +
                 "}"
 
@@ -141,17 +141,27 @@ internal class Shape(
         "" +
                 "precision mediump float;" +
                 "" +
-                "uniform vec3 uReverseLightDirection;" +
+                "uniform vec3 uLightPosition;" +
                 "uniform vec3 uColor;" +
                 "" +
                 "varying vec3 vNormal;" +
                 "" +
+                "bool isNan(float val);" +
+                "" +
                 "void main(){" +
                 "   vec3 normal = normalize(vNormal);" +
-                "   float light = dot(normal, uReverseLightDirection);" +
+                "   float light = dot(normal, uLightPosition);" +
                 "   vec3 color = uColor * light;" +
                 "" +
+                "   if(isNan(light)){" +
+                "       color = vec3(1.0, 0.6, 0.0);" +
+                "   }" +
                 "   gl_FragColor = vec4(color, 1.0);" +
+                "}" +
+                "" +
+                "bool isNan(float val)" +
+                "{" +
+                "  return (val <= 0.0 || 0.0 <= val) ? false : true;" +
                 "}"
 
     // Initialize the program and attach shaders
@@ -173,7 +183,7 @@ internal class Shape(
     private var aPositionHandle: Int = 0
     private var aNormalHandle: Int = 0
 
-    private var uReverseLightHandle: Int = 0
+    private var uLightPosition: Int = 0
     private var uColorHandle: Int = 0
     private var uProjectionMatrixHandle: Int = 0
     private var uViewMatrixHandle: Int = 0
@@ -186,7 +196,7 @@ internal class Shape(
         aNormalHandle = GLES20.glGetAttribLocation(mProgram, "aNormal").also { checkForHandleError(it, "Normal") }
 
         // Uniform handles
-        uReverseLightHandle = GLES20.glGetUniformLocation(mProgram, "uReverseLightDirection").also { checkForHandleError(it, "Reverse light direction") }
+        uLightPosition = GLES20.glGetUniformLocation(mProgram, "uLightPosition").also { checkForHandleError(it, "Light position") }
         uColorHandle = GLES20.glGetUniformLocation(mProgram, "uColor").also { checkForHandleError(it, "Color") }
         uProjectionMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uProjectionMatrix").also { checkForHandleError(it, "Projection matrix") }
         uViewMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uViewMatrix").also { checkForHandleError(it, "View matrix") }
@@ -205,7 +215,7 @@ internal class Shape(
     private val colorStride: Int = COORDS_PER_COLOR * ShapeUtil.FLOAT.byteSize
 
     // Create draw functionality
-    fun draw(modelMatrix: FloatArray, viewMatrix: FloatArray, projectionMatrix: FloatArray, normalMatrix: FloatArray){
+    fun draw(modelMatrix: FloatArray, viewMatrix: FloatArray, projectionMatrix: FloatArray, normalMatrix: FloatArray, lightPosition: FloatArray){
         GLES20.glUseProgram(mProgram)
 
         prepareHandles()
@@ -221,8 +231,7 @@ internal class Shape(
         GLES20.glUniform3fv(uColorHandle, 1, color, 0)
 
         // Set the reverse light direction
-        val lightDirection = floatArrayOf(0.5f, 0.7f, 1f).normalizeVector()
-        GLES20.glUniform3fv(uReverseLightHandle, 1, lightDirection, 0)
+        GLES20.glUniform3fv(uLightPosition, 1, lightPosition, 0)
 
         // Set the normal matrix
         GLES20.glUniformMatrix4fv(uNormalMatrixHandle, 1, false, normalMatrix, 0)

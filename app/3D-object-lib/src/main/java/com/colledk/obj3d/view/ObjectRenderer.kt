@@ -3,6 +3,7 @@ package com.colledk.obj3d.view
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
+import com.colledk.obj3d.math.MathUtil.normalizeVector
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.shapes.Shape
 import com.colledk.obj3d.shapes.ShapeUtil
@@ -28,7 +29,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
     var yAngle: Float = 0f
 
     @Volatile
-    var lightIntensity: Float = 1f
+    var lightPosition: FloatArray = floatArrayOf(-0.5f, -0.7f, -1f)
 
     // Define our matrices in a 4D spectrum (4x4)
     private val projectionMatrix = FloatArray(16)
@@ -137,7 +138,8 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             modelMatrix = modelMatrix,
             viewMatrix = viewMatrix,
             projectionMatrix = projectionMatrix,
-            normalMatrix = normalMatrix
+            normalMatrix = normalMatrix,
+            lightPosition = lightPosition.normalizeVector()
         )
     }
 
