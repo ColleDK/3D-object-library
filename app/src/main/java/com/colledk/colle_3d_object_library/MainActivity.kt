@@ -42,7 +42,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.colledk.obj3d.view.ObjectSurfaceView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
+import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
@@ -62,7 +62,10 @@ class MainActivity : AppCompatActivity() {
                     AndroidView(factory = { ctx ->
                         glView = ObjectSurfaceView(ctx).apply {
                             scope.launch {
-                                loadObject(R.raw.building, scale = 15, onFinish = {
+                                loadMaterial(R.raw.cubemtl, onFinish = {
+                                    Timber.d("Loaded material file")
+                                })
+                                loadObject(R.raw.cube, scale = 1, onFinish = {
                                     scope.launch {
                                         scaffoldState.snackbarHostState.showSnackbar(
                                             "Loaded object cube"

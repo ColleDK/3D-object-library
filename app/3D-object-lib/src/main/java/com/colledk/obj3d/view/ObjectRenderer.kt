@@ -4,6 +4,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import com.colledk.obj3d.math.MathUtil.normalizeVector
+import com.colledk.obj3d.parser.data.Material
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.shapes.Shape
 import com.colledk.obj3d.shapes.ShapeUtil
@@ -42,6 +43,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
     private var renderUpdate: RenderUpdate = RenderUpdate()
     private var shape: Shape? = null
+    private var materials: List<Material> = listOf()
 
     override fun onSurfaceCreated(unsued: GL10?, config: EGLConfig?) {
         // We set the background color
@@ -57,7 +59,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
         // Create the objects from the objectdata
         data?.let {
-            shape = Shape(it)
+            shape = Shape(it, materials)
         }
     }
 
@@ -81,7 +83,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
         if (renderUpdate.shouldUpdateShape){
             data?.let {
-                shape = Shape(it)
+                shape = Shape(it, materials)
             }
 
             renderUpdate = RenderUpdate(
@@ -168,6 +170,21 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         )
     }
 
+    fun attachMaterials(materials: List<Material>){
+        this.materials = materials
+        renderUpdate = RenderUpdate(
+            shouldUpdateColor = renderUpdate.shouldUpdateColor,
+            shouldUpdateShape = true
+        )
+    }
+
+    fun attachMaterials(material: Material){
+        this.materials = listOf(material)
+        renderUpdate = RenderUpdate(
+            shouldUpdateColor = renderUpdate.shouldUpdateColor,
+            shouldUpdateShape = true
+        )
+    }
 }
 
 internal fun loadShader(type: Int, shaderCode: String): Int {

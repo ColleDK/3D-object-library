@@ -7,10 +7,12 @@ import com.colledk.obj3d.parser.data.VertexData
 import com.colledk.obj3d.parser.data.VertexNormalData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.InputStream
 import kotlin.math.acos
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 internal class ObjectFileParser {
 
@@ -40,7 +42,10 @@ internal class ObjectFileParser {
         val faces = mutableListOf<FaceData>()
         val vertexNormals = mutableListOf<VertexNormalData>()
 
-        //
+        var currentColor = floatArrayOf(0.7f, 0.7f, 0.7f)
+        var currentDiffuse = floatArrayOf(1.0f, 1.0f, 1.0f)
+        var currentMaterialName = ""
+
         lines.forEachIndexed { _, line ->
             when{
                 line.matches(VERTEX_REGEX) -> {
@@ -76,13 +81,17 @@ internal class ObjectFileParser {
                         faces.add(
                             FaceData(
                                 vertexIndeces = lineData.map { it.value.split("/")[0].toInt() - 1 },
-                                vertexNormalIndeces = lineData.map { it.value.split("/")[2].toInt() - 1 }
+                                vertexNormalIndeces = lineData.map { it.value.split("/")[2].toInt() - 1 },
+                                color = currentColor,
+                                materialName = currentMaterialName
                             )
                         )
                     } else {
                         faces.add(
                             FaceData(
-                                vertexIndeces = lineData.map { it.value.toInt() - 1 }
+                                vertexIndeces = lineData.map { it.value.toInt() - 1 },
+                                color = currentColor,
+                                materialName = currentMaterialName
                             )
                         )
                     }
@@ -185,7 +194,9 @@ internal class ObjectFileParser {
                                                 it[(currentIndex - 1 + indexList.size) % indexList.size],
                                                 it[currentIndex],
                                                 it[(currentIndex + 1) % indexList.size],
-                                            )
+                                            ),
+                                            color = currentColor,
+                                            materialName = currentMaterialName
                                         )
                                     )
                                 } ?: run {
@@ -195,7 +206,9 @@ internal class ObjectFileParser {
                                                 indexList[(currentIndex - 1 + indexList.size) % indexList.size],
                                                 indexList[currentIndex],
                                                 indexList[(currentIndex + 1) % indexList.size],
-                                            )
+                                            ),
+                                            color = currentColor,
+                                            materialName = currentMaterialName
                                         )
                                     )
                                 }
@@ -218,8 +231,10 @@ internal class ObjectFileParser {
                     // We add the last one
                     faces.add(
                         FaceData(
-                            indexList,
-                            normalIndeces
+                            vertexIndeces = indexList,
+                            vertexNormalIndeces = normalIndeces,
+                            color = currentColor,
+                            materialName = currentMaterialName
                         )
                     )
                 }
@@ -250,6 +265,23 @@ internal class ObjectFileParser {
                         }
                     }
                 }
+                line.matches(OBJECT_REGEX) -> {
+                    val rand = Random.Default
+                    var r = rand.nextFloat()
+                    var g = rand.nextFloat()
+                    var b = rand.nextFloat()
+                    currentColor = floatArrayOf(r, g, b)
+
+                    r = rand.nextFloat()
+                    g = rand.nextFloat()
+                    b = rand.nextFloat()
+                    currentDiffuse = floatArrayOf(r, g, b)
+                }
+                line.matches(MATERIAL_REGEX) -> {
+                    val lineData = MATERIAL_DATA_REGEX.findAll(line).map { it.value }.filterNot { it == "usemtl" }.toList()
+                    Timber.d("New material $lineData")
+                    currentMaterialName = lineData.firstOrNull() ?: ""
+                }
                 else -> { /* Not a useful command so we move on */ }
             }
         }
@@ -268,5 +300,8 @@ internal class ObjectFileParser {
         val FACE_DATA_REGEX = "(\\d+([/]+\\d+)*)".toRegex()
         val VERTEX_NORMAL_REGEX = "vn[ ]+([-+]?[0-9]+(.[0-9]+)?([ ]*)?){3,4}".toRegex()
         val VERTEX_NORMAL_DATA_REGEX = "[-+]?[0-9]+(.[0-9]+)?".toRegex()
+        val OBJECT_REGEX = "g[ ]+\\w+".toRegex()
+        val MATERIAL_REGEX = "usemtl[ ]+\\w+".toRegex()
+        val MATERIAL_DATA_REGEX = "\\w+".toRegex()
     }
 }

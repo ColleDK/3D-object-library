@@ -5,7 +5,9 @@ import android.graphics.Color
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.view.MotionEvent
+import com.colledk.obj3d.parser.MaterialFileParser
 import com.colledk.obj3d.parser.ObjectFileParser
+import com.colledk.obj3d.parser.data.Material
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.parser.data.VertexData
 import com.colledk.obj3d.parser.data.VertexNormalData
@@ -48,6 +50,22 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         // Set the data on the renderer
         renderer.setObject(data = data)
         // Update the view with the new data
+        renderObject()
+    }
+
+    /**
+     * Function for attaching a material file to the current object
+     * @param resourceId the id of the raw resource
+     * @param onFinish lambda function called when the file has finished loading
+     */
+    suspend fun loadMaterial(
+        resourceId: Int,
+        onFinish: () -> Unit = {}
+    ) {
+        val materials = MaterialFileParser().parseStream(context.resources.openRawResource(resourceId), onFinish = onFinish)
+
+        renderer.attachMaterials(materials = materials)
+
         renderObject()
     }
 
