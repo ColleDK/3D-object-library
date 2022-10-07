@@ -35,7 +35,6 @@ internal class ObjectFileParser {
     }
 
     private suspend fun parseLines(lines: List<String>, scale: Int = 1, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO){
-        val currentColor = floatArrayOf(1f, 1f, 1f)
         var currentMaterialName = ""
 
         val faces = mutableListOf<FaceData>()
@@ -55,7 +54,6 @@ internal class ObjectFileParser {
                 line.matches(FACE_REGEX) -> {
                     val currentFaceData = getFaceData(
                         line = line,
-                        color = currentColor,
                         materialName = currentMaterialName
                     )
 
@@ -65,7 +63,6 @@ internal class ObjectFileParser {
                     val currentFaceData = getFaceDataTriangulated(
                         line = line,
                         vertices = vertices,
-                        color = currentColor,
                         materialName = currentMaterialName
                     )
 
@@ -73,8 +70,7 @@ internal class ObjectFileParser {
                 }
                 line.matches(VERTEX_NORMAL_REGEX) -> {
                     val currentVertexNormalData = getVertexNormalData(
-                        line = line,
-                        scale = scale
+                        line = line
                     )
 
                     normals.add(currentVertexNormalData)
@@ -126,7 +122,7 @@ internal class ObjectFileParser {
         }
     }
 
-    private fun getFaceData(line: String, color: FloatArray, materialName: String): FaceData {
+    private fun getFaceData(line: String, materialName: String): FaceData {
         val lineData = FACE_DATA_REGEX.findAll(line).map { it.value }.toList()
 
         // Check if we only have face vertex data
@@ -134,20 +130,18 @@ internal class ObjectFileParser {
             FaceData(
                 vertexIndeces = lineData.map { it.split("/")[0].toInt() - 1 },
                 vertexNormalIndeces = lineData.map { it.split("/")[2].toInt() - 1 },
-                color = color,
                 materialName = materialName
             )
 
         } else {
             FaceData(
                 vertexIndeces = lineData.map { it.toInt() - 1 },
-                color = color,
                 materialName = materialName
             )
         }
     }
 
-    private fun getFaceDataTriangulated(line: String, vertices: List<VertexData>, color: FloatArray, materialName: String): List<FaceData> {
+    private fun getFaceDataTriangulated(line: String, vertices: List<VertexData>, materialName: String): List<FaceData> {
         val faces = mutableListOf<FaceData>()
 
         // First we retrieve the data from the line
@@ -238,7 +232,6 @@ internal class ObjectFileParser {
                                     it[currentIndex],
                                     it[(currentIndex + 1) % indexList.size],
                                 ),
-                                color = color,
                                 materialName = materialName
                             )
                         )
@@ -250,7 +243,6 @@ internal class ObjectFileParser {
                                     indexList[currentIndex],
                                     indexList[(currentIndex + 1) % indexList.size],
                                 ),
-                                color = color,
                                 materialName = materialName
                             )
                         )
@@ -276,7 +268,6 @@ internal class ObjectFileParser {
             FaceData(
                 vertexIndeces = indexList,
                 vertexNormalIndeces = normalIndeces,
-                color = color,
                 materialName = materialName
             )
         )
@@ -284,25 +275,25 @@ internal class ObjectFileParser {
         return faces
     }
 
-    private fun getVertexNormalData(line: String, scale: Int): VertexNormalData {
+    private fun getVertexNormalData(line: String): VertexNormalData {
         val lineData = VERTEX_NORMAL_DATA_REGEX.findAll(line).map { it.value.toFloat() }.toList()
 
         return when(lineData.size){
             3 -> {
                 VertexNormalData(
-                    x = lineData[0] / scale,
-                    y = lineData[1] / scale,
-                    z = lineData[2] / scale,
+                    x = lineData[0],
+                    y = lineData[1],
+                    z = lineData[2],
                     null,
                 )
 
             }
             4 -> {
                 VertexNormalData(
-                    x = lineData[0] / scale,
-                    y = lineData[1] / scale,
-                    z = lineData[2] / scale,
-                    w = lineData[3] / scale,
+                    x = lineData[0],
+                    y = lineData[1],
+                    z = lineData[2],
+                    w = lineData[3],
                 )
 
             }
