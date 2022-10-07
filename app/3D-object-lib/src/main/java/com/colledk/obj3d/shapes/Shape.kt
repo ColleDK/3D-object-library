@@ -274,7 +274,7 @@ internal class Shape(
                 "" +
                 "   vec3 effectiveDiffuse = vDiffuse * vColor;" +
                 "" +
-                "   gl_FragColor = vec4(vAmbient * vec3(1.0, 1.0, 1.0) + effectiveDiffuse * light + vSpecular * pow(specularLight, vShininess * 5.0), vOpacity);" +
+                "   gl_FragColor = vec4(vEmissive + vAmbient * vec3(1.0, 1.0, 1.0) + effectiveDiffuse * light + vSpecular * pow(specularLight, vShininess), vOpacity);" +
                 "}"
 
     // Initialize the program and attach shaders
