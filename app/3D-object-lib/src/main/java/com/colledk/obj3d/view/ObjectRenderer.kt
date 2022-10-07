@@ -42,7 +42,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
     private val modelMatrix = FloatArray(16)
 
     private var renderUpdate: RenderUpdate = RenderUpdate()
-    private var shape: Shape? = null
+    private var shapes: Shape? = null
     private var materials: List<Material> = listOf()
 
     override fun onSurfaceCreated(unsued: GL10?, config: EGLConfig?) {
@@ -59,7 +59,10 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
         // Create the objects from the objectdata
         data?.let {
-            shape = Shape(it, materials)
+            shapes = Shape(
+                objectData = it,
+                materials = materials
+            )
         }
     }
 
@@ -68,7 +71,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         val mvMatrix = FloatArray(16)
 
         // Update the background color
-        if (renderUpdate.shouldUpdateColor){
+        if (renderUpdate.shouldUpdateColor) {
             GLES20.glClearColor(
                 backgroundColor[0],
                 backgroundColor[1],
@@ -81,9 +84,12 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             )
         }
 
-        if (renderUpdate.shouldUpdateShape){
+        if (renderUpdate.shouldUpdateShape) {
             data?.let {
-                shape = Shape(it, materials)
+                shapes = Shape(
+                    objectData = it,
+                    materials = materials
+                )
             }
 
             renderUpdate = RenderUpdate(
@@ -136,12 +142,13 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.transposeM(normalMatrix, 0, inverseModelView, 0)
 
         // Draw the object
-        shape?.draw(
+        shapes?.draw(
             modelMatrix = modelMatrix,
             viewMatrix = viewMatrix,
             projectionMatrix = projectionMatrix,
             normalMatrix = normalMatrix,
-            lightPosition = lightPosition.normalizeVector()
+            lightPosition = floatArrayOf(-1f, 3f, 5f).normalizeVector(),
+            cameraPosition = floatArrayOf(5f, 2f, 5f)
         )
     }
 
@@ -155,7 +162,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 50f)
     }
 
-    fun setObject(data: ObjectData){
+    fun setObject(data: ObjectData) {
         this.data = data
         renderUpdate = RenderUpdate(
             shouldUpdateShape = true,
@@ -163,14 +170,14 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         )
     }
 
-    fun setBackground(){
+    fun setBackground() {
         renderUpdate = RenderUpdate(
             shouldUpdateColor = true,
             shouldUpdateShape = renderUpdate.shouldUpdateShape
         )
     }
 
-    fun attachMaterials(materials: List<Material>){
+    fun attachMaterials(materials: List<Material>) {
         this.materials = materials
         renderUpdate = RenderUpdate(
             shouldUpdateColor = renderUpdate.shouldUpdateColor,
@@ -178,7 +185,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         )
     }
 
-    fun attachMaterials(material: Material){
+    fun attachMaterials(material: Material) {
         this.materials = listOf(material)
         renderUpdate = RenderUpdate(
             shouldUpdateColor = renderUpdate.shouldUpdateColor,

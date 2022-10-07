@@ -92,9 +92,75 @@ internal class Shape(
         val array = mutableListOf<Float>()
 
         objectData.faces.forEach { face ->
-            array.addAll((materials.firstOrNull { it.name == face.materialName } ?: Material()).diffuse.toList())
-            array.addAll((materials.firstOrNull { it.name == face.materialName } ?: Material()).diffuse.toList())
-            array.addAll((materials.firstOrNull { it.name == face.materialName } ?: Material()).diffuse.toList())
+            val currentMaterial = materials.firstOrNull { it.name == face.materialName } ?: Material()
+            array.addAll(currentMaterial.diffuse.toList())
+            array.addAll(currentMaterial.diffuse.toList())
+            array.addAll(currentMaterial.diffuse.toList())
+        }
+
+        array.toFloatArray()
+    }
+
+    private val ambients: () -> FloatArray = {
+        val array = mutableListOf<Float>()
+
+        objectData.faces.forEach { face ->
+            val currentMaterial = materials.firstOrNull { it.name == face.materialName } ?: Material()
+            array.addAll(currentMaterial.ambient.toList())
+            array.addAll(currentMaterial.ambient.toList())
+            array.addAll(currentMaterial.ambient.toList())
+        }
+
+        array.toFloatArray()
+    }
+
+    private val emissives: () -> FloatArray = {
+        val array = mutableListOf<Float>()
+
+        objectData.faces.forEach { face ->
+            val currentMaterial = materials.firstOrNull { it.name == face.materialName } ?: Material()
+            array.addAll(currentMaterial.emissive.toList())
+            array.addAll(currentMaterial.emissive.toList())
+            array.addAll(currentMaterial.emissive.toList())
+        }
+
+        array.toFloatArray()
+    }
+
+    private val speculars: () -> FloatArray = {
+        val array = mutableListOf<Float>()
+
+        objectData.faces.forEach { face ->
+            val currentMaterial = materials.firstOrNull { it.name == face.materialName } ?: Material()
+            array.addAll(currentMaterial.specular.toList())
+            array.addAll(currentMaterial.specular.toList())
+            array.addAll(currentMaterial.specular.toList())
+        }
+
+        array.toFloatArray()
+    }
+
+    private val shininess: () -> FloatArray = {
+        val array = mutableListOf<Float>()
+
+        objectData.faces.forEach { face ->
+            val currentMaterial = materials.firstOrNull { it.name == face.materialName } ?: Material()
+            array.add(currentMaterial.shininess)
+            array.add(currentMaterial.shininess)
+            array.add(currentMaterial.shininess)
+        }
+
+        array.toFloatArray()
+    }
+
+    private val opacities: () -> FloatArray = {
+        val array = mutableListOf<Float>()
+
+        objectData.faces.forEach { face ->
+            val currentMaterial = materials.firstOrNull { it.name == face.materialName } ?: Material()
+            array.add(currentMaterial.opacity)
+            array.add(currentMaterial.opacity)
+            array.add(currentMaterial.opacity)
         }
 
         array.toFloatArray()
@@ -115,49 +181,23 @@ internal class Shape(
             }
         }
 
-    private val vertexBuffer: FloatBuffer =
-        ByteBuffer.allocateDirect(coords().size * ShapeUtil.FLOAT.byteSize).run {
-            order(ByteOrder.nativeOrder())
+    private val vertexBuffer: FloatBuffer = createFloatBuffer(coords)
 
-            asFloatBuffer().apply {
-                put(coords())
+    private val normalBuffer: FloatBuffer = createFloatBuffer(vertexNormals)
 
-                position(0)
-            }
-        }
+    private val colorBuffer: FloatBuffer = createFloatBuffer(colors)
 
-    private val normalBuffer: FloatBuffer =
-        ByteBuffer.allocateDirect(vertexNormals().size * ShapeUtil.FLOAT.byteSize).run {
-            order(ByteOrder.nativeOrder())
+    private val diffuseBuffer: FloatBuffer = createFloatBuffer(diffuses)
 
-            asFloatBuffer().apply {
-                put(vertexNormals())
+    private val ambientBuffer: FloatBuffer = createFloatBuffer(ambients)
 
-                position(0)
-            }
-        }
+    private val emissiveBuffer: FloatBuffer = createFloatBuffer(emissives)
 
-    private val colorBuffer: FloatBuffer =
-        ByteBuffer.allocateDirect(colors().size * ShapeUtil.FLOAT.byteSize).run {
-            order(ByteOrder.nativeOrder())
+    private val specularBuffer: FloatBuffer = createFloatBuffer(speculars)
 
-            asFloatBuffer().apply {
-                put(colors())
+    private val shininessBuffer: FloatBuffer = createFloatBuffer(shininess)
 
-                position(0)
-            }
-        }
-
-    private val diffuseBuffer: FloatBuffer =
-        ByteBuffer.allocateDirect(diffuses().size * ShapeUtil.FLOAT.byteSize).run {
-            order(ByteOrder.nativeOrder())
-
-            asFloatBuffer().apply {
-                put(diffuses())
-
-                position(0)
-            }
-        }
+    private val opacityBuffer: FloatBuffer = createFloatBuffer(opacities)
 
     // Create the shader code
     private val vertexShaderCode =
@@ -166,50 +206,75 @@ internal class Shape(
                 "uniform mat4 uViewMatrix;" +
                 "uniform mat4 uModelMatrix;" +
                 "uniform mat4 uNormalMatrix;" +
+                "uniform vec3 uCameraPosition;" +
                 "" +
                 "attribute vec3 aPosition;" +
                 "attribute vec3 aNormal;" +
                 "attribute vec3 aColor;" +
+                "" +
                 "attribute vec3 aDiffuse;" +
+                "attribute vec3 aAmbient;" +
+                "attribute vec3 aEmissive;" +
+                "attribute vec3 aSpecular;" +
+                "attribute float aShininess;" +
+                "attribute float aOpacity;" +
                 "" +
                 "varying vec3 vNormal;" +
                 "varying vec3 vColor;" +
+                "varying vec3 vSurfaceToView;" +
+                "" +
                 "varying vec3 vDiffuse;" +
+                "varying vec3 vAmbient;" +
+                "varying vec3 vEmissive;" +
+                "varying vec3 vSpecular;" +
+                "varying float vShininess;" +
+                "varying float vOpacity;" +
                 "" +
                 "void main(){" +
+                "" +
                 "   vDiffuse = aDiffuse;" +
+                "   vAmbient = aAmbient;" +
+                "   vEmissive = aEmissive;" +
+                "   vSpecular = aSpecular;" +
+                "   vShininess = aShininess;" +
+                "   vOpacity = aOpacity;" +
+                "" +
                 "   vColor = aColor;" +
+                "   vec4 worldPosition = uNormalMatrix * vec4(aPosition, 1.0);" +
+                "   vSurfaceToView = uCameraPosition - worldPosition.xyz;" +
                 "   vNormal = (uNormalMatrix * vec4(aNormal, 0.0)).xyz;" +
                 "   gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);" +
                 "}"
 
     private val fragmentShaderCode =
         "" +
-                "precision mediump float;" +
+                "precision highp float;" +
                 "" +
                 "uniform vec3 uLightPosition;" +
                 "" +
+                "varying vec3 vDiffuse;" +
+                "varying vec3 vAmbient;" +
+                "varying vec3 vEmissive;" +
+                "varying vec3 vSpecular;" +
+                "varying float vShininess;" +
+                "varying float vOpacity;" +
+                "" +
                 "varying vec3 vNormal;" +
                 "varying vec3 vColor;" +
-                "varying vec3 vDiffuse;" +
-                "" +
-                "bool isNan(float val);" +
+                "varying vec3 vSurfaceToView;" +
                 "" +
                 "void main(){" +
                 "   vec3 normal = normalize(vNormal);" +
+                "" +
+                "   vec3 surfaceToViewDirection = normalize(vSurfaceToView);" +
+                "   vec3 halfVector = normalize(uLightPosition + surfaceToViewDirection);" +
+                "" +
                 "   float light = dot(uLightPosition, normal) * .5 + .5;" +
-                "   vec3 diffuse = vDiffuse * vColor;" +
-                "   vec3 color = diffuse * light;" +
+                "   float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);" +
                 "" +
-                "   if(isNan(light)){" +
-                "       color = vec3(1.0, 0.6, 0.0);" +
-                "   }" +
-                "   gl_FragColor = vec4(color, 1.0);" +
-                "}" +
+                "   vec3 effectiveDiffuse = vDiffuse * vColor;" +
                 "" +
-                "bool isNan(float val)" +
-                "{" +
-                "  return (val <= 0.0 || 0.0 <= val) ? false : true;" +
+                "   gl_FragColor = vec4(vAmbient * vec3(1.0, 1.0, 1.0) + effectiveDiffuse * light + vSpecular * pow(specularLight, vShininess * 5.0), vOpacity);" +
                 "}"
 
     // Initialize the program and attach shaders
@@ -231,27 +296,41 @@ internal class Shape(
     private var aPositionHandle: Int = 0
     private var aNormalHandle: Int = 0
     private var aColorHandle: Int = 0
+
     private var aDiffuseHandle: Int = 0
+    private var aAmbientHandle: Int = 0
+    private var aEmissiveHandle: Int = 0
+    private var aSpecularHandle: Int = 0
+    private var aShininessHandle: Int = 0
+    private var aOpacityHandle: Int = 0
 
     private var uLightPositionHandle: Int = 0
     private var uProjectionMatrixHandle: Int = 0
     private var uViewMatrixHandle: Int = 0
     private var uModelMatrixHandle: Int = 0
     private var uNormalMatrixHandle: Int = 0
+    private var uCameraPositionHandle: Int = 0
 
     internal fun prepareHandles(){
         // Attribute handles
         aPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition").also { checkForHandleError(it, "Position") }
         aNormalHandle = GLES20.glGetAttribLocation(mProgram, "aNormal").also { checkForHandleError(it, "Normal") }
         aColorHandle = GLES20.glGetAttribLocation(mProgram, "aColor").also { checkForHandleError(it, "Color") }
-        aDiffuseHandle = GLES20.glGetAttribLocation(mProgram, "aDiffuse").also { checkForHandleError(it, "Diffuse") }
 
         // Uniform handles
+        aDiffuseHandle = GLES20.glGetAttribLocation(mProgram, "aDiffuse").also { checkForHandleError(it, "Diffuse") }
+        aAmbientHandle = GLES20.glGetAttribLocation(mProgram, "aAmbient").also { checkForHandleError(it, "Ambient") }
+        aEmissiveHandle = GLES20.glGetAttribLocation(mProgram, "aEmissive").also { checkForHandleError(it, "Emissive") }
+        aSpecularHandle = GLES20.glGetAttribLocation(mProgram, "aSpecular").also { checkForHandleError(it, "Specular") }
+        aShininessHandle = GLES20.glGetAttribLocation(mProgram, "aShininess").also { checkForHandleError(it, "Shininess") }
+        aOpacityHandle = GLES20.glGetAttribLocation(mProgram, "aOpacity").also { checkForHandleError(it, "Opacity") }
+
         uLightPositionHandle = GLES20.glGetUniformLocation(mProgram, "uLightPosition").also { checkForHandleError(it, "Light position") }
         uProjectionMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uProjectionMatrix").also { checkForHandleError(it, "Projection matrix") }
         uViewMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uViewMatrix").also { checkForHandleError(it, "View matrix") }
         uModelMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uModelMatrix").also { checkForHandleError(it, "Model matrix") }
         uNormalMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uNormalMatrix").also { checkForHandleError(it, "Normal matrix") }
+        uCameraPositionHandle = GLES20.glGetUniformLocation(mProgram, "uCameraPosition").also { checkForHandleError(it, "Camera position") }
     }
 
     internal fun checkForHandleError(handle: Int, name: String = ""){
@@ -265,7 +344,7 @@ internal class Shape(
     private val colorStride: Int = COORDS_PER_COLOR * ShapeUtil.FLOAT.byteSize
 
     // Create draw functionality
-    fun draw(modelMatrix: FloatArray, viewMatrix: FloatArray, projectionMatrix: FloatArray, normalMatrix: FloatArray, lightPosition: FloatArray){
+    fun draw(modelMatrix: FloatArray, viewMatrix: FloatArray, projectionMatrix: FloatArray, normalMatrix: FloatArray, lightPosition: FloatArray, cameraPosition: FloatArray){
         GLES20.glUseProgram(mProgram)
 
         prepareHandles()
@@ -279,6 +358,7 @@ internal class Shape(
 
         // Set the reverse light direction
         GLES20.glUniform3fv(uLightPositionHandle, 1, lightPosition, 0)
+        GLES20.glUniform3fv(uCameraPositionHandle, 1, cameraPosition, 0)
 
         // Set the normal matrix
         GLES20.glUniformMatrix4fv(uNormalMatrixHandle, 1, false, normalMatrix, 0)
@@ -288,6 +368,11 @@ internal class Shape(
         GLES20.glEnableVertexAttribArray(aNormalHandle)
         GLES20.glEnableVertexAttribArray(aColorHandle)
         GLES20.glEnableVertexAttribArray(aDiffuseHandle)
+        GLES20.glEnableVertexAttribArray(aAmbientHandle)
+        GLES20.glEnableVertexAttribArray(aEmissiveHandle)
+        GLES20.glEnableVertexAttribArray(aSpecularHandle)
+        GLES20.glEnableVertexAttribArray(aShininessHandle)
+        GLES20.glEnableVertexAttribArray(aOpacityHandle)
 
         // Prepare position attributes
         GLES20.glVertexAttribPointer(
@@ -319,11 +404,56 @@ internal class Shape(
 
         GLES20.glVertexAttribPointer(
             aDiffuseHandle,
-            COORDS_PER_COLOR,
+            COORDS_PER_VERTEX,
             GLES20.GL_FLOAT,
             false,
             0,
             diffuseBuffer
+        )
+
+        GLES20.glVertexAttribPointer(
+            aAmbientHandle,
+            COORDS_PER_VERTEX,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            ambientBuffer
+        )
+
+        GLES20.glVertexAttribPointer(
+            aEmissiveHandle,
+            COORDS_PER_VERTEX,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            emissiveBuffer
+        )
+
+        GLES20.glVertexAttribPointer(
+            aSpecularHandle,
+            COORDS_PER_VERTEX,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            specularBuffer
+        )
+
+        GLES20.glVertexAttribPointer(
+            aShininessHandle,
+            1,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            shininessBuffer
+        )
+
+        GLES20.glVertexAttribPointer(
+            aOpacityHandle,
+            1,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            opacityBuffer
         )
 
         // Draw the object
@@ -334,6 +464,11 @@ internal class Shape(
         GLES20.glDisableVertexAttribArray(aNormalHandle)
         GLES20.glDisableVertexAttribArray(aColorHandle)
         GLES20.glDisableVertexAttribArray(aDiffuseHandle)
+        GLES20.glDisableVertexAttribArray(aAmbientHandle)
+        GLES20.glDisableVertexAttribArray(aEmissiveHandle)
+        GLES20.glDisableVertexAttribArray(aSpecularHandle)
+        GLES20.glDisableVertexAttribArray(aShininessHandle)
+        GLES20.glDisableVertexAttribArray(aOpacityHandle)
     }
 
     companion object{

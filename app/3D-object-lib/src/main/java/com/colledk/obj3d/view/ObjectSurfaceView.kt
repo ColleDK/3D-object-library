@@ -7,10 +7,6 @@ import android.os.Build
 import android.view.MotionEvent
 import com.colledk.obj3d.parser.MaterialFileParser
 import com.colledk.obj3d.parser.ObjectFileParser
-import com.colledk.obj3d.parser.data.Material
-import com.colledk.obj3d.parser.data.ObjectData
-import com.colledk.obj3d.parser.data.VertexData
-import com.colledk.obj3d.parser.data.VertexNormalData
 import timber.log.Timber
 
 private const val TOUCH_SCALE_FACTOR = 180f / 1000f

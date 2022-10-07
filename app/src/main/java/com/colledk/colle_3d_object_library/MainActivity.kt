@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
                                 loadMaterial(R.raw.cubemtl, onFinish = {
                                     Timber.d("Loaded material file")
                                 })
-                                loadObject(R.raw.cube, scale = 1, onFinish = {
+                                loadObject(R.raw.chair, scale = 5, onFinish = {
                                     scope.launch {
                                         scaffoldState.snackbarHostState.showSnackbar(
                                             "Loaded object cube"
@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                         glView = glView
                     )
 
-                    IntensityChooser(glView = glView, modifier = Modifier.fillMaxWidth(.3f).align(Alignment.CenterStart))
+//                    IntensityChooser(glView = glView, modifier = Modifier.fillMaxWidth(.3f).align(Alignment.CenterStart))
 
                     Column(
                         modifier = Modifier

@@ -122,7 +122,7 @@ internal class MaterialFileParser {
     }
 
     companion object {
-        val MATERIAL_NAME_REGEX = "newmtl[ ]+\\w+".toRegex()
+        val MATERIAL_NAME_REGEX = "newmtl[ ]+[\\w: ]+".toRegex()
         val SHININESS_REGEX = "Ns[ ]+\\d+.\\d+".toRegex()
         val AMBIENT_REGEX = "Ka([ ]+\\d+.\\d+){3}".toRegex()
         val DIFFUSE_REGEX = "Kd([ ]+\\d+.\\d+){3}".toRegex()
@@ -132,7 +132,7 @@ internal class MaterialFileParser {
         val DISSOLVE_REGEX = "d[ ]+\\d+.\\d+".toRegex()
         val ILLUM_REGEX = "illum[ ]+\\d+".toRegex()
         val FLOAT_DATA_REGEX = "\\d+.\\d+".toRegex()
-        val STRING_DATA_REGEX = "\\w+".toRegex()
+        val STRING_DATA_REGEX = "[\\w:]+".toRegex()
         val INT_DATA_REGEX = "\\d+".toRegex()
     }
 }

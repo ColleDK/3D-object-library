@@ -2,6 +2,7 @@ package com.colledk.obj3d.math
 
 import com.colledk.obj3d.parser.data.VertexData
 import timber.log.Timber
+import kotlin.math.acos
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -46,6 +47,24 @@ object MathUtil {
             y * other.z - z * other.y,
             z * other.x - x * other.z,
             x * other.y - y * other.x
+        )
+    }
+
+    internal fun VertexData.dotProduct(other: VertexData): Float {
+        return this.x * other.x + this.y * other.y + this.z * other.z
+    }
+
+    internal fun VertexData.length(): Float {
+        return sqrt(this.x.pow(2) + this.y.pow(2) + this.z.pow(2))
+    }
+
+    internal fun VertexData.angle(other: VertexData): Double {
+        val theta = this.dotProduct(other).toDouble() / (this.length() * other.length())
+
+        return Math.toDegrees(
+            acos(
+                theta
+            )
         )
     }
 }
