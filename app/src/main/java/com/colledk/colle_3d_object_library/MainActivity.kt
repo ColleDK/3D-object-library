@@ -65,14 +65,15 @@ class MainActivity : AppCompatActivity() {
                                 loadMaterial(R.raw.cubemtl, onFinish = {
                                     Timber.d("Loaded material file")
                                 })
-                                loadObject(R.raw.chair, scale = 5, onFinish = {
+                                loadObject(url = "https://people.sc.fsu.edu/~jburkardt/data/obj/minicooper.obj", scale = 20, onFinish = {
                                     scope.launch {
                                         scaffoldState.snackbarHostState.showSnackbar(
-                                            "Loaded object chair"
+                                            "Loaded object car"
                                         )
                                     }
                                 })
                                 setCameraPosition(1f, 1f, 1f)
+                                setCameraFrustum(near = .1f)
                                 setBackgroundColor(floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f))
                             }
                         }
@@ -255,6 +256,7 @@ fun ObjectChooser(
         R.raw.minicooper to "Car",
         R.raw.streetlamp to "Lamp",
         R.raw.dragon to "Dragon",
+        R.raw.chair to "Chair"
     )
 
     val scales = listOf(
@@ -262,6 +264,7 @@ fun ObjectChooser(
         5,
         40,
         4,
+        5,
         5,
     )
 

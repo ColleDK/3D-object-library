@@ -2,12 +2,25 @@ package com.colledk.obj3d.parser
 
 import android.content.Context
 import com.colledk.obj3d.parser.data.Material
+import com.colledk.obj3d.parser.data.ObjectData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.InputStream
 
 internal class MaterialFileParser {
+
+    suspend fun parseURL(url: String,onFinish: () -> Unit): List<Material> = withContext(Dispatchers.IO) {
+        val apiService = ApiClient.getClient()
+        val body = apiService.getFromUrl(url = url).body()
+
+        body?.byteStream()?.let {
+            return@withContext parseStream(inputStream = it, onFinish = onFinish)
+        } ?: run {
+            Timber.e("Cannot load file from url")
+            return@withContext parseLines(lines = listOf(), onFinish = onFinish)
+        }
+    }
 
     suspend fun parseFile(fileId: Int, context: Context, onFinish: () -> Unit): List<Material> = withContext(Dispatchers.IO){
         // Create an input stream from the raw resource

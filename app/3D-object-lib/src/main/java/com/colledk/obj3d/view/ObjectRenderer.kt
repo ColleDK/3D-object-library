@@ -42,7 +42,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
     var cameraPosition: VertexData = VertexData(0f, 0f, 1f)
 
     @Volatile
-    var frustumNear: Float = 3f
+    var frustumNear: Float = 1f
 
     @Volatile
     var frustumFar: Float = 50f
@@ -122,13 +122,19 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
         // We get the view matrix for the camera
-        Matrix.setLookAtM(viewMatrix, 0, cameraPosition.x, cameraPosition.y, frustumFar - zoomVal + cameraPosition.z, 0f, 0f, 0f, 0f, 1.0f, 0f)
+        Matrix.setLookAtM(
+            viewMatrix, // Location where the matrix should be stored
+            0, // Offset until the first position
+            cameraPosition.x, cameraPosition.y, frustumFar - zoomVal + cameraPosition.z, // Camera placement x,y,z
+            0f, 0f, 0f, // Where camera should look towards x,y,z
+            0f, 1.0f, 0f // The unit vector for up x,y,z
+        )
 
         // Calculate the vp matrix
         Matrix.multiplyMM(vpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
         // Set the rotation of the object
-        Matrix.setRotateM(rotationX, 0, xAngle, 0f, 1f, 0f)
+        Matrix.setRotateM(rotationX, 0, xAngle, 0f, 1f, 1f)
         Matrix.setRotateM(rotationY, 0, yAngle, 1f, 0f, 0f)
 
         // Find the center point
@@ -167,7 +173,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             viewMatrix = viewMatrix,
             projectionMatrix = projectionMatrix,
             normalMatrix = normalMatrix,
-            lightPosition = lightPosition.normalizeVector(),
+            lightPosition = cameraPosition.toFloatArray().normalizeVector(),
             cameraPosition = cameraPosition.toFloatArray()
         )
     }
