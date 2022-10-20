@@ -7,12 +7,12 @@ import android.os.Build
 import android.view.MotionEvent
 import com.colledk.obj3d.parser.MaterialFileParser
 import com.colledk.obj3d.parser.ObjectFileParser
-import timber.log.Timber
 
 private const val TOUCH_SCALE_FACTOR = 180f / 1000f
 
 class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
+    private var currentTouchMode: TouchMode = TouchMode.NONE
     private val renderer: ObjectRenderer
 
     private var previousX: Float = 0f
@@ -137,13 +137,14 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        Timber.d("Handling new touch event")
         when(event.action){
             MotionEvent.ACTION_DOWN -> {
+                currentTouchMode = TouchMode.PRESS
                 previousX = event.x
                 previousY = event.y
             }
             MotionEvent.ACTION_MOVE -> {
+                currentTouchMode = TouchMode.MOVE
                 val dx = event.x - previousX
                 val dy = event.y - previousY
 
@@ -155,6 +156,18 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
                 renderObject()
             }
+            MotionEvent.ACTION_UP -> {
+                when(currentTouchMode){
+                    TouchMode.PRESS -> { // The last user input was a single press so we look for ray intersection
+                        renderer.calculateRayPicking(
+                            mouseX = previousX - left,
+                            mouseY = previousY - top
+                        )
+                    }
+                    else -> { /* Do nothing */ }
+                }
+                currentTouchMode = TouchMode.NONE
+            }
         }
 
         return true
@@ -162,5 +175,11 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
     private fun renderObject(){
         requestRender()
+    }
+
+    private enum class TouchMode {
+        PRESS,
+        MOVE,
+        NONE,
     }
 }

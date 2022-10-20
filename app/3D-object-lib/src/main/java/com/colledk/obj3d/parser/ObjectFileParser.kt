@@ -1,7 +1,6 @@
 package com.colledk.obj3d.parser
 
 import android.content.Context
-import com.colledk.obj3d.math.MathUtil.angle
 import com.colledk.obj3d.parser.data.FaceData
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.parser.data.VertexData
@@ -183,7 +182,7 @@ internal class ObjectFileParser {
             val vector2 = curr - next
 
             // Calculate the inner angle of the vertex A between B and C
-            val angle = vector1.angle(vector2)
+            val angle = vector1.angleBetween(vector2)
 
             // If the angle is below 180 then it is a convex vertex which means that we might be able to triangulate it
             if (angle < 180){
