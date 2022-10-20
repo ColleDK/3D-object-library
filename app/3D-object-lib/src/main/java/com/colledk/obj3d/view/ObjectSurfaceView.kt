@@ -70,13 +70,37 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
     ) {
         // Load in the data from the parser
         val data = ObjectFileParser().parseStream(
-            context.resources.openRawResource(resourceId),
+            inputStream = context.resources.openRawResource(resourceId),
             scale = scale,
             onFinish = onFinish
         )
 
         // Set the data on the renderer
         renderer.setObject(data = data)
+        // Update the view with the new data
+        renderObject()
+    }
+
+    /**
+     * Function for loading a 3D object from a url.
+     * @param url The full path of the url that the file should be loaded from (ex https://localhost:8000/x.obj).
+     * @param onFinish Callback for when the file has finished loading.
+     */
+    suspend fun loadObject(
+        url: String,
+        scale: Int = 1,
+        onFinish: () -> Unit = {}
+    ) {
+        // Load in the data from the parser
+        val data = ObjectFileParser().parseURL(
+            url = url,
+            scale = scale,
+            onFinish = onFinish
+        )
+
+        // Set the data on the renderer
+        renderer.setObject(data = data)
+
         // Update the view with the new data
         renderObject()
     }
@@ -91,7 +115,26 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         onFinish: () -> Unit = {}
     ) {
         val materials = MaterialFileParser().parseStream(
-            context.resources.openRawResource(resourceId),
+            inputStream = context.resources.openRawResource(resourceId),
+            onFinish = onFinish
+        )
+
+        renderer.attachMaterials(materials = materials)
+
+        renderObject()
+    }
+
+    /**
+     * Function for attaching a material file from a url to the current object.
+     * @param url The full path of the url that the file should be loaded from (i.e. https://localhost:8000/x.obj).
+     * @param onFinish Callback for when the file has finished loading.
+     */
+    suspend fun loadMaterial(
+        url: String,
+        onFinish: () -> Unit = {}
+    ) {
+        val materials = MaterialFileParser().parseURL(
+            url = url,
             onFinish = onFinish
         )
 

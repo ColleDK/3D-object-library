@@ -11,6 +11,17 @@ import timber.log.Timber
 import java.io.InputStream
 
 internal class ObjectFileParser {
+    suspend fun parseURL(url: String, scale: Int = 1, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO) {
+        val apiService = ApiClient.getClient()
+        val body = apiService.getFromUrl(url = url).body()
+
+        body?.byteStream()?.let {
+            return@withContext parseStream(inputStream = it, scale = scale, onFinish = onFinish)
+        } ?: run {
+            Timber.e("Cannot load file from url")
+            return@withContext parseLines(lines = listOf(), onFinish = onFinish)
+        }
+    }
 
     suspend fun parseFile(fileId: Int, context: Context, scale: Int = 1, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO){
         // Create an input stream from the raw resource
