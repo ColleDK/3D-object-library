@@ -41,6 +41,15 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
     @Volatile
     var cameraPosition: VertexData = VertexData(0f, 0f, 1f)
 
+    @Volatile
+    var frustumNear: Float = 3f
+
+    @Volatile
+    var frustumFar: Float = 50f
+
+    @Volatile
+    var zoomVal: Float = frustumFar - frustumNear
+
     // Define our matrices in a 4D spectrum (4x4)
     private val projectionMatrix = FloatArray(16)
     private val viewMatrix = FloatArray(16)
@@ -113,7 +122,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
 
         // We get the view matrix for the camera
-        Matrix.setLookAtM(viewMatrix, 0, 5f, 2f, 5f, 0f, 0f, 0f, 0f, 1.0f, 0f)
+        Matrix.setLookAtM(viewMatrix, 0, cameraPosition.x, cameraPosition.y, frustumFar - zoomVal + cameraPosition.z, 0f, 0f, 0f, 0f, 1.0f, 0f)
 
         // Calculate the vp matrix
         Matrix.multiplyMM(vpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
@@ -172,7 +181,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         // We get the aspect ratio of the screen so we can transform the projectionmatrix to look correct on every screen
         val ratio = width.toFloat() / height.toFloat()
 
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 3f, 50f)
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, frustumNear, frustumFar)
     }
 
     fun setObject(data: ObjectData) {

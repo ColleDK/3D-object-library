@@ -68,10 +68,11 @@ class MainActivity : AppCompatActivity() {
                                 loadObject(R.raw.chair, scale = 5, onFinish = {
                                     scope.launch {
                                         scaffoldState.snackbarHostState.showSnackbar(
-                                            "Loaded object cube"
+                                            "Loaded object chair"
                                         )
                                     }
                                 })
+                                setCameraPosition(1f, 1f, 1f)
                                 setBackgroundColor(floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f))
                             }
                         }
