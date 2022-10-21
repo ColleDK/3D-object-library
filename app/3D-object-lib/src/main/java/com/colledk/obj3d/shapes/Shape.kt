@@ -1,7 +1,6 @@
 package com.colledk.obj3d.shapes
 
 import android.opengl.GLES20
-import com.colledk.obj3d.math.MathUtil.crossProduct
 import com.colledk.obj3d.parser.data.Material
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.view.loadShader

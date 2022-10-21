@@ -18,6 +18,8 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
     private val renderer: ObjectRenderer
 
+    private var hitObjectCallback: (hitObject: Boolean) -> Unit = {}
+
     init {
         // We define the current OpenGL version to be 2.0
         setEGLContextClientVersion(2)
@@ -48,8 +50,9 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                 onClick = { clickX, clickY ->
                     val hit = renderer.calculateRayPicking(
                         mouseX = clickX - left,
-                        mouseY = clickY - top
+                        mouseY = clickY - top,
                     )
+                    hitObjectCallback(hit)
                     Timber.d("Hit object $hit")
                 }
             ),
@@ -243,6 +246,14 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      */
     fun setCustomGestureDetector(detector: IGestureDetector) {
         gestureDetector = detector
+    }
+
+    /**
+     * Function for setting a callback that will be called whenever a click action happens on the screen, and will return a [Boolean] for whether an object was hit or not.
+     * @param callback The callback function that should be called whenever a user click happens.
+     */
+    fun setObjectClickCallback( callback: (hitObject: Boolean) -> Unit) {
+        hitObjectCallback = callback
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean =

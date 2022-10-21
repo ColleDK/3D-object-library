@@ -1,5 +1,6 @@
 package com.colledk.colle_3d_object_library
 
+import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import com.colledk.obj3d.view.ObjectSurfaceView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -46,10 +49,16 @@ import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
+    private val viewModel: MainViewModel = MainViewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
+            val shouldOpen = viewModel.shouldOpenDialog.collectAsState()
+            val descriptions = viewModel.descriptions.collectAsState()
+            val currentIndex = viewModel.currentObjectIndex.collectAsState()
+
             var glView by remember {
                 mutableStateOf<ObjectSurfaceView?>(null)
             }
@@ -57,28 +66,36 @@ class MainActivity : AppCompatActivity() {
             val scope = rememberCoroutineScope()
             val scaffoldState = rememberScaffoldState()
 
+
             Scaffold(scaffoldState = scaffoldState) { padding ->
                 Box(modifier = Modifier.padding(paddingValues = padding)) {
                     AndroidView(factory = { ctx ->
                         glView = ObjectSurfaceView(ctx).apply {
                             scope.launch {
-                                loadMaterial(R.raw.cubemtl, onFinish = {
-                                    Timber.d("Loaded material file")
-                                })
-                                loadObject(url = "https://people.sc.fsu.edu/~jburkardt/data/obj/minicooper.obj", scale = 20, onFinish = {
-                                    scope.launch {
-                                        scaffoldState.snackbarHostState.showSnackbar(
-                                            "Loaded object car"
-                                        )
+                                loadMaterial(R.raw.cubemtl)
+                                loadObject(
+                                    resourceId = descriptions.value[currentIndex.value].resourceId,
+                                    scale = descriptions.value[currentIndex.value].scale,
+                                    onFinish = {
+                                        scope.launch {
+                                            scaffoldState.snackbarHostState.showSnackbar(
+                                                "Loaded object ${descriptions.value[currentIndex.value].name}"
+                                            )
+                                        }
                                     }
-                                })
+                                )
+                                setObjectClickCallback { viewModel.setShouldOpenDialog(it) }
                                 setCameraPosition(1f, 1f, 1f)
-                                setCameraFrustum(near = .1f)
-                                setBackgroundColor(floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f))
                             }
                         }
                         glView!!
                     })
+
+                    if (shouldOpen.value){
+                        Dialog(onDismissRequest = { viewModel.setShouldOpenDialog(value = false) }) {
+                            Text(text = descriptions.value[currentIndex.value].description)
+                        }
+                    }
 
                     ColorChooser(
                         modifier = Modifier
@@ -87,8 +104,6 @@ class MainActivity : AppCompatActivity() {
                             .padding(PaddingValues(top = 15.dp)),
                         glView = glView
                     )
-
-//                    IntensityChooser(glView = glView, modifier = Modifier.fillMaxWidth(.3f).align(Alignment.CenterStart))
 
                     Column(
                         modifier = Modifier
@@ -116,7 +131,8 @@ class MainActivity : AppCompatActivity() {
                                         "Finished loading object $it"
                                     )
                                 }
-                            }
+                            },
+                            viewModel = viewModel
                         )
                     }
                 }
@@ -156,122 +172,23 @@ fun ColorChooser(glView: ObjectSurfaceView? = null, modifier: Modifier = Modifie
 }
 
 @Composable
-fun IntensityChooser(glView: ObjectSurfaceView? = null, modifier: Modifier = Modifier) {
-    var sliderPosX by remember {
-        mutableStateOf(1f)
-    }
-
-    var sliderPosY by remember {
-        mutableStateOf(1f)
-    }
-
-    var sliderPosZ by remember {
-        mutableStateOf(1f)
-    }
-
-    Column(modifier = modifier) {
-        Box(
-            modifier = Modifier
-                .border(1.dp, MaterialTheme.colors.onBackground, RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colors.background, RoundedCornerShape(20.dp))
-                .padding(PaddingValues(horizontal = 15.dp, vertical = 5.dp))
-        ) {
-            Text(
-                text = "Light position x: " + "%.2f".format(sliderPosX),
-                modifier = Modifier.align(Alignment.Center),
-                textAlign = TextAlign.Center
-            )
+fun DescriptionDialog(shouldOpen: Boolean, currentDescription: String, onDismiss: () -> Unit) {
+    if (shouldOpen){
+        Dialog(onDismissRequest = onDismiss ) {
+            Text(text = currentDescription)
         }
-        Slider(
-            value = sliderPosX, onValueChange = {
-                sliderPosX = it
-                glView?.setLightPosition(x = sliderPosX, y = sliderPosY, z = sliderPosZ)
-            },
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colors.onBackground,
-                activeTrackColor = MaterialTheme.colors.onBackground,
-                inactiveTrackColor = MaterialTheme.colors.background.copy(alpha = 0.7f)
-            )
-        )
-        Box(
-            modifier = Modifier
-                .border(1.dp, MaterialTheme.colors.onBackground, RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colors.background, RoundedCornerShape(20.dp))
-                .padding(PaddingValues(horizontal = 15.dp, vertical = 5.dp))
-        ) {
-            Text(
-                text = "Light position y: " + "%.2f".format(sliderPosY),
-                modifier = Modifier.align(Alignment.Center),
-                textAlign = TextAlign.Center
-            )
-        }
-        Slider(
-            value = sliderPosY, onValueChange = {
-                sliderPosY = it
-                glView?.setLightPosition(x = sliderPosX, y = sliderPosY, z = sliderPosZ)
-            },
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colors.onBackground,
-                activeTrackColor = MaterialTheme.colors.onBackground,
-                inactiveTrackColor = MaterialTheme.colors.background.copy(alpha = 0.7f)
-            )
-        )
-        Box(
-            modifier = Modifier
-                .border(1.dp, MaterialTheme.colors.onBackground, RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colors.background, RoundedCornerShape(20.dp))
-                .padding(PaddingValues(horizontal = 15.dp, vertical = 5.dp))
-        ) {
-            Text(
-                text = "Light position z: " + "%.2f".format(sliderPosZ),
-                modifier = Modifier.align(Alignment.Center),
-                textAlign = TextAlign.Center
-            )
-        }
-        Slider(
-            value = sliderPosZ, onValueChange = {
-                sliderPosZ = it
-                glView?.setLightPosition(x = sliderPosX, y = sliderPosY, z = sliderPosZ)
-            },
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colors.onBackground,
-                activeTrackColor = MaterialTheme.colors.onBackground,
-                inactiveTrackColor = MaterialTheme.colors.background.copy(alpha = 0.7f)
-            )
-        )
     }
 }
 
 @Composable
 fun ObjectChooser(
     scope: CoroutineScope,
+    viewModel: MainViewModel,
     glView: ObjectSurfaceView? = null,
     modifier: Modifier = Modifier,
     loadingObjectCallback: (name: String) -> Unit = {},
     onFinishLoading: (name: String) -> Unit = {}
 ) {
-    val objects = mapOf(
-        R.raw.building to "Building",
-        R.raw.human to "Human",
-        R.raw.minicooper to "Car",
-        R.raw.streetlamp to "Lamp",
-        R.raw.dragon to "Dragon",
-        R.raw.chair to "Chair"
-    )
-
-    val scales = listOf(
-        15,
-        5,
-        40,
-        4,
-        5,
-        5,
-    )
-
-    var objectIndex by remember {
-        mutableStateOf(0)
-    }
-
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -282,12 +199,13 @@ fun ObjectChooser(
         Button(
             onClick = {
                 scope.launch {
-                    objectIndex = (objectIndex - 1 + objects.size) % objects.size
-                    loadingObjectCallback(objects.values.elementAt(objectIndex))
+                    viewModel.goToPreviousObject()
+                    val currentObject = viewModel.descriptions.value[viewModel.currentObjectIndex.value]
+
                     glView?.loadObject(
-                        objects.keys.elementAt(objectIndex),
-                        scales[objectIndex % scales.size]
-                    ) { onFinishLoading(objects.values.elementAt(objectIndex)) }
+                        currentObject.resourceId,
+                        currentObject.scale
+                    ) { onFinishLoading(currentObject.name) }
                 }
             },
             modifier = Modifier
@@ -332,11 +250,13 @@ fun ObjectChooser(
         Button(
             onClick = {
                 scope.launch {
-                    objectIndex = (objectIndex + 1) % objects.size
-                    loadingObjectCallback(objects.values.elementAt(objectIndex))
+                    viewModel.goToNextObject()
+
+                    val currentObject = viewModel.descriptions.value[viewModel.currentObjectIndex.value]
+
                     glView?.loadObject(
-                        objects.keys.elementAt(objectIndex),
-                        scales[objectIndex]
+                        currentObject.resourceId,
+                        currentObject.scale
                     )
                 }
             },
