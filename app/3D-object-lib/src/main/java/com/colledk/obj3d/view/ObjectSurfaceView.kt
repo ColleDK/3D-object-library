@@ -35,7 +35,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         createGestureDetector()
     }
 
-    private fun createGestureDetector(){
+    private fun createGestureDetector() {
         gestureDetector =
             GestureDetector(context = context, listener = GestureDetector.GestureListener(
                 onZoom = { scale ->
@@ -48,6 +48,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                     renderObject()
                 },
                 onClick = { clickX, clickY ->
+                    // The last user input was a single press so we look for ray intersection
                     val hit = renderer.calculateRayPicking(
                         mouseX = clickX - left,
                         mouseY = clickY - top,
@@ -186,20 +187,14 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
             0 -> {
                 renderer.backgroundColor = floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f)
             }
-            1 -> {
-                val maxValue = color.maxOf { it }
-                renderer.backgroundColor = floatArrayOf(color[0], maxValue, maxValue, maxValue)
-            }
-            2 -> {
-                val maxValue = color.maxOf { it }
-                renderer.backgroundColor = floatArrayOf(color[0], color[1], maxValue, maxValue)
-            }
-            3 -> {
-                val maxValue = color.maxOf { it }
-                renderer.backgroundColor = floatArrayOf(color[0], color[1], color[2], maxValue)
-            }
             else -> {
-                renderer.backgroundColor = floatArrayOf(color[0], color[1], color[2], color[3])
+                val maxValue = color.maxOf { it }
+                renderer.backgroundColor = floatArrayOf(
+                    color.getOrNull(0) ?: maxValue,
+                    color.getOrNull(1) ?: maxValue,
+                    color.getOrNull(2) ?: maxValue,
+                    color.getOrNull(3) ?: maxValue
+                )
             }
         }
         renderer.setBackground()
@@ -229,11 +224,11 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
     /**
      * Function for setting the frustum of the camera. The frustum defines a FOV cone from the near point until the far point.
-     * These points are by default used for input functionality with zoom and click. The default frustum view is {3, 50}.
+     * These points are by default used for input functionality with zoom and click. The default frustum view is {1, 50}.
      * @param near The near point of the frustum.
      * @param far The far point of the frustum.
      */
-    fun setCameraFrustum(near: Float = 3f, far: Float = 50f) {
+    fun setCameraFrustum(near: Float = 1f, far: Float = 50f) {
         renderer.frustumNear = near
         renderer.frustumFar = far
         createGestureDetector()
@@ -252,7 +247,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * Function for setting a callback that will be called whenever a click action happens on the screen, and will return a [Boolean] for whether an object was hit or not.
      * @param callback The callback function that should be called whenever a user click happens.
      */
-    fun setObjectClickCallback( callback: (hitObject: Boolean) -> Unit) {
+    fun setObjectClickCallback(callback: (hitObject: Boolean) -> Unit) {
         hitObjectCallback = callback
     }
 

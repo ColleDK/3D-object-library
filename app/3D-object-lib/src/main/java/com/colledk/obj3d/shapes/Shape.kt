@@ -32,6 +32,7 @@ internal class Shape(
         array.toFloatArray()
     }
 
+    // Add the face vertex normals
     private val vertexNormals: () -> FloatArray = {
         val array = mutableListOf<Float>()
 
@@ -75,6 +76,7 @@ internal class Shape(
         array.toIntArray()
     }
 
+    // TODO transform to uniform color
     private val colors: () -> FloatArray = {
         val array = mutableListOf<Float>()
 
@@ -87,6 +89,7 @@ internal class Shape(
         array.toFloatArray()
     }
 
+    // Create data for each material value
     private val diffuses: () -> FloatArray = {
         val array = mutableListOf<Float>()
 
@@ -165,20 +168,8 @@ internal class Shape(
         array.toFloatArray()
     }
 
-    // Define our buffers for the coordinates and draworder
-    private val drawBuffer: IntBuffer =
-        ByteBuffer.allocateDirect(drawOrder().size * ShapeUtil.INT.byteSize).run {
-            // Use Android's built in ordering
-            order(ByteOrder.nativeOrder())
-
-            asIntBuffer().apply {
-                // Insert the draworder into the buffer
-                put(drawOrder())
-
-                // Set the position
-                position(0)
-            }
-        }
+    // Define our buffers
+    private val drawBuffer: IntBuffer = createIntBuffer(drawOrder)
 
     private val vertexBuffer: FloatBuffer = createFloatBuffer(coords)
 
@@ -200,17 +191,19 @@ internal class Shape(
 
     // Create the shader code
     private val vertexShaderCode =
-        "" +
+        "" +    // Define the uniform data for the vertex
                 "uniform mat4 uProjectionMatrix;" +
                 "uniform mat4 uViewMatrix;" +
                 "uniform mat4 uModelMatrix;" +
                 "uniform mat4 uNormalMatrix;" +
                 "uniform vec3 uCameraPosition;" +
                 "" +
+                // Define the non-material attributes
                 "attribute vec3 aPosition;" +
                 "attribute vec3 aNormal;" +
                 "attribute vec3 aColor;" +
                 "" +
+                // Define the material attributes
                 "attribute vec3 aDiffuse;" +
                 "attribute vec3 aAmbient;" +
                 "attribute vec3 aEmissive;" +
@@ -218,10 +211,12 @@ internal class Shape(
                 "attribute float aShininess;" +
                 "attribute float aOpacity;" +
                 "" +
+                // Define the non-material outputs
                 "varying vec3 vNormal;" +
                 "varying vec3 vColor;" +
                 "varying vec3 vSurfaceToView;" +
                 "" +
+                // Define the material outputs
                 "varying vec3 vDiffuse;" +
                 "varying vec3 vAmbient;" +
                 "varying vec3 vEmissive;" +
@@ -231,6 +226,7 @@ internal class Shape(
                 "" +
                 "void main(){" +
                 "" +
+                    // Set the material outputs
                 "   vDiffuse = aDiffuse;" +
                 "   vAmbient = aAmbient;" +
                 "   vEmissive = aEmissive;" +
@@ -238,19 +234,25 @@ internal class Shape(
                 "   vShininess = aShininess;" +
                 "   vOpacity = aOpacity;" +
                 "" +
+                    // Set the color
                 "   vColor = aColor;" +
+                    // Calculate the vertex normal based on the world position
                 "   vec4 worldPosition = uNormalMatrix * vec4(aPosition, 1.0);" +
                 "   vSurfaceToView = uCameraPosition - worldPosition.xyz;" +
                 "   vNormal = (uNormalMatrix * vec4(aNormal, 0.0)).xyz;" +
+                    // Set the position of the vertex based on the transformations
                 "   gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);" +
                 "}"
 
     private val fragmentShaderCode =
         "" +
+                // Set the precision to high to get better results
                 "precision highp float;" +
                 "" +
+                // Define the uniform location of the light
                 "uniform vec3 uLightPosition;" +
                 "" +
+                // Define the material outputs from vertex shader
                 "varying vec3 vDiffuse;" +
                 "varying vec3 vAmbient;" +
                 "varying vec3 vEmissive;" +
@@ -258,21 +260,26 @@ internal class Shape(
                 "varying float vShininess;" +
                 "varying float vOpacity;" +
                 "" +
+                // Define the non-material outputs from vertex shader
                 "varying vec3 vNormal;" +
                 "varying vec3 vColor;" +
                 "varying vec3 vSurfaceToView;" +
                 "" +
                 "void main(){" +
+                    // Normalize the vertex normal
                 "   vec3 normal = normalize(vNormal);" +
                 "" +
+                    // Calculate the halfvector between the light position and the surface
                 "   vec3 surfaceToViewDirection = normalize(vSurfaceToView);" +
                 "   vec3 halfVector = normalize(uLightPosition + surfaceToViewDirection);" +
                 "" +
+                    // Calculate the amount of light reflected on the surface
                 "   float light = dot(uLightPosition, normal) * .5 + .5;" +
                 "   float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);" +
                 "" +
                 "   vec3 effectiveDiffuse = vDiffuse * vColor;" +
                 "" +
+                    // Set the color of the pixel based on the material and light
                 "   gl_FragColor = vec4(vEmissive + vAmbient * vec3(1.0, 1.0, 1.0) + effectiveDiffuse * light + vSpecular * pow(specularLight, vShininess), vOpacity);" +
                 "}"
 
@@ -337,10 +344,6 @@ internal class Shape(
             Timber.e("Error loading handle $name")
         }
     }
-
-    private val vertexCount: Int = coords().size / COORDS_PER_VERTEX
-    private val vertexStride: Int = COORDS_PER_VERTEX * ShapeUtil.FLOAT.byteSize
-    private val colorStride: Int = COORDS_PER_COLOR * ShapeUtil.FLOAT.byteSize
 
     // Create draw functionality
     fun draw(modelMatrix: FloatArray, viewMatrix: FloatArray, projectionMatrix: FloatArray, normalMatrix: FloatArray, lightPosition: FloatArray, cameraPosition: FloatArray){
@@ -439,7 +442,7 @@ internal class Shape(
 
         GLES20.glVertexAttribPointer(
             aShininessHandle,
-            1,
+            COORDS_PER_MATERIAL,
             GLES20.GL_FLOAT,
             false,
             0,
@@ -448,7 +451,7 @@ internal class Shape(
 
         GLES20.glVertexAttribPointer(
             aOpacityHandle,
-            1,
+            COORDS_PER_MATERIAL,
             GLES20.GL_FLOAT,
             false,
             0,
@@ -473,5 +476,6 @@ internal class Shape(
     companion object{
         const val COORDS_PER_VERTEX = 3
         const val COORDS_PER_COLOR = 3
+        const val COORDS_PER_MATERIAL = 1
     }
 }

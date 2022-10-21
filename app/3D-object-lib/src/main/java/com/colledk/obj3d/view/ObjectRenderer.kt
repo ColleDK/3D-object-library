@@ -22,30 +22,39 @@ import javax.microedition.khronos.opengles.GL10
 import kotlin.math.abs
 
 internal class ObjectRenderer : GLSurfaceView.Renderer {
+    // The current object to be displayed
     @Volatile
     var data: ObjectData? = null
 
+    // The background as floatarray
     @Volatile
     var backgroundColor: FloatArray = floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f)
 
+    // The current x rotation
     @Volatile
     var xAngle: Float = 0f
 
+    // The current y rotation
     @Volatile
     var yAngle: Float = 0f
 
+    // The current position of the light
     @Volatile
     var lightPosition: FloatArray = floatArrayOf(0f, 0f, 1f)
 
+    // The current position of the camera
     @Volatile
     var cameraPosition: VertexData = VertexData(0f, 0f, 1f)
 
+    // The current near position for the camera frustum
     @Volatile
     var frustumNear: Float = 1f
 
+    // The current far position for the camera frustum
     @Volatile
     var frustumFar: Float = 50f
 
+    // The current value zoomed in between near and far frustum
     @Volatile
     var zoomVal: Float = frustumFar - frustumNear
 
@@ -60,10 +69,14 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
     private val rotationY = FloatArray(16)
     private val modelMatrix = FloatArray(16)
 
+    // Create an object to handle re-rendering of data
     private var renderUpdate: RenderUpdate = RenderUpdate()
-    private var shapes: Shape? = null
+
+    // The current OpenGL object used to display current data and attached materials
+    private var shape: Shape? = null
     private var materials: List<Material> = listOf()
 
+    // The current viewport values
     private var currentScreenHeight: Int = 0
     private var currentScreenWidth: Int = 0
 
@@ -81,7 +94,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
         // Create the objects from the objectdata
         data?.let {
-            shapes = Shape(
+            shape = Shape(
                 objectData = it,
                 materials = materials
             )
@@ -105,7 +118,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
         if (renderUpdate.shouldUpdateShape) {
             data?.let {
-                shapes = Shape(
+                shape = Shape(
                     objectData = it,
                     materials = materials
                 )
@@ -167,7 +180,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.transposeM(normalMatrix, 0, inverseModelView, 0)
 
         // Draw the object
-        shapes?.draw(
+        shape?.draw(
             modelMatrix = modelMatrix,
             viewMatrix = viewMatrix,
             projectionMatrix = projectionMatrix,
@@ -330,6 +343,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
                 return false
             }
 
+            // Calculate the volume for the face triangle and the near and far positions
             val volume1 = getSignedTetrahedronVolume(a = q1, b = p1, c = p2, d = p3)
             val volume2 = getSignedTetrahedronVolume(a = q2, b = p1, c = p2, d = p3)
 

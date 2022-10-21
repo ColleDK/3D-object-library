@@ -11,9 +11,11 @@ import java.io.InputStream
 internal class MaterialFileParser {
 
     suspend fun parseURL(url: String,onFinish: () -> Unit): List<Material> = withContext(Dispatchers.IO) {
+        // Get the data from the url
         val apiService = ApiClient.getClient()
         val body = apiService.getFromUrl(url = url).body()
 
+        // Create an inputstream from the responsebody
         body?.byteStream()?.let {
             return@withContext parseStream(inputStream = it, onFinish = onFinish)
         } ?: run {
@@ -135,15 +137,15 @@ internal class MaterialFileParser {
     }
 
     companion object {
-        val MATERIAL_NAME_REGEX = "newmtl[ ]+[\\w: ]+".toRegex()
-        val SHININESS_REGEX = "Ns[ ]+\\d+.\\d+".toRegex()
-        val AMBIENT_REGEX = "Ka([ ]+\\d+.\\d+){3}".toRegex()
-        val DIFFUSE_REGEX = "Kd([ ]+\\d+.\\d+){3}".toRegex()
-        val SPECULAR_REGEX = "Ks([ ]+\\d+.\\d+){3}".toRegex()
-        val EMISSIVE_REGEX = "Ke([ ]+\\d+.\\d+){3}".toRegex()
-        val OPTICAL_DENSITY_REGEX = "Ni[ ]+\\d+.\\d+".toRegex()
-        val DISSOLVE_REGEX = "d[ ]+\\d+.\\d+".toRegex()
-        val ILLUM_REGEX = "illum[ ]+\\d+".toRegex()
+        val MATERIAL_NAME_REGEX = "newmtl\\s+[\\w:\\s]+".toRegex()
+        val SHININESS_REGEX = "Ns\\s+\\d+.\\d+".toRegex()
+        val AMBIENT_REGEX = "Ka(\\s+\\d+.\\d+){3}".toRegex()
+        val DIFFUSE_REGEX = "Kd(\\s+\\d+.\\d+){3}".toRegex()
+        val SPECULAR_REGEX = "Ks(\\s+\\d+.\\d+){3}".toRegex()
+        val EMISSIVE_REGEX = "Ke(\\s+\\d+.\\d+){3}".toRegex()
+        val OPTICAL_DENSITY_REGEX = "Ni\\s+\\d+.\\d+".toRegex()
+        val DISSOLVE_REGEX = "d\\s+\\d+.\\d+".toRegex()
+        val ILLUM_REGEX = "illum\\s+\\d+".toRegex()
         val FLOAT_DATA_REGEX = "\\d+.\\d+".toRegex()
         val STRING_DATA_REGEX = "[\\w:]+".toRegex()
         val INT_DATA_REGEX = "\\d+".toRegex()
