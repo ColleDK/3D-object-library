@@ -7,7 +7,6 @@ import android.opengl.Matrix
 import com.colledk.obj3d.allLet
 import com.colledk.obj3d.math.MathUtil.getSignedTetrahedronVolume
 import com.colledk.obj3d.math.MathUtil.hasSameSign
-import com.colledk.obj3d.math.MathUtil.normalizeVector
 import com.colledk.obj3d.math.MathUtil.toVertexData
 import com.colledk.obj3d.parser.data.Material
 import com.colledk.obj3d.parser.data.ObjectData
@@ -134,7 +133,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.multiplyMM(vpMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
 
         // Set the rotation of the object
-        Matrix.setRotateM(rotationX, 0, xAngle, 0f, 1f, 1f)
+        Matrix.setRotateM(rotationX, 0, xAngle, 0f, 1f, 0f)
         Matrix.setRotateM(rotationY, 0, yAngle, 1f, 0f, 0f)
 
         // Find the center point
@@ -173,7 +172,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             viewMatrix = viewMatrix,
             projectionMatrix = projectionMatrix,
             normalMatrix = normalMatrix,
-            lightPosition = cameraPosition.toFloatArray().normalizeVector(),
+            lightPosition = cameraPosition.normalize().toFloatArray(),
             cameraPosition = cameraPosition.toFloatArray()
         )
     }
@@ -233,7 +232,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         // Use the built-in OpenGL unproject to get the positions on the direction vector from mouse click to back position
         val unProjectedNearPos = (GLU.gluUnProject(
             mouseX,
-            mouseY,
+            currentScreenHeight - mouseY, // invert the y-position because Android and OpenGL works in different direction
             0f,
             mvMatrix,
             0,
@@ -247,7 +246,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
         val unProjectedFarPos = (GLU.gluUnProject(
             mouseX,
-            mouseY,
+            currentScreenHeight - mouseY, // invert the y-position because Android and OpenGL works in different direction
             1f,
             mvMatrix,
             0,
@@ -265,10 +264,58 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             val near = floatArrayOf(nearPos[0] / nearPos[3], nearPos[1] / nearPos[3], nearPos[2] / nearPos[3])
             val far = floatArrayOf(farPos[0] / farPos[3], farPos[1] / farPos[3], farPos[2] / farPos[3])
 
+//            val inverseMVPMatrix = FloatArray(16)
+//            Matrix.invertM(inverseMVPMatrix, 0, mvpMatrix, 0)
+//
+//            mollerTrumboreIntersection(
+//                origin = near.toVertexData(),
+//                rayDir = (far.toVertexData() - near.toVertexData()).normalize()
+//            )
             return checkRayPickingIntersection(q1 = near.toVertexData(), q2 = far.toVertexData())
         }
         return false.also { Timber.e("Failed to unproject coordinates for mouse click {$mouseX, $mouseY}\nReceived unprojected data: {$unProjectedNearPos, $unProjectedFarPos}") }
     }
+
+//    private fun mollerTrumboreIntersection(origin: VertexData, rayDir: VertexData){
+//        data?.faces?.forEach { face ->
+//            // The the current vertices
+//            val v1 = data?.vertices?.getOrNull(face.vertexIndeces[0])
+//            val v2 = data?.vertices?.getOrNull(face.vertexIndeces[1])
+//            val v3 = data?.vertices?.getOrNull(face.vertexIndeces[2])
+//
+//            val (p1, p2, p3) = allLet(v1, v2, v3) {
+//                Timber.e("Cannot calculate ray picking intersection with null objects {$v1, $v2, $v3}")
+//                return
+//            }
+//
+//            val edge1 = p2 - p1
+//            val edge2 = p3 - p1
+//
+//            val epsilon = 0.000001f
+//
+//            val p = rayDir.crossProduct(edge2)
+//            val det = edge1.dotProduct(p)
+//
+//            if (det <= -epsilon || det >= epsilon) {
+//                val invDet = 1f / det
+//                val t = origin - p1
+//
+//                val u = t.dotProduct(p) * invDet
+//
+//                if (u in 0f..1f) {
+//                    val q = t.crossProduct(edge1)
+//                    val v = rayDir.dotProduct(q) * invDet
+//
+//                    if (v >= 0f && u + v <= 1f) {
+//                        val t2 = edge2.dotProduct(q) * invDet
+//                        if (t2 > epsilon){
+//                            Timber.d("Triangle intersected with ray!")
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private fun checkRayPickingIntersection(q1: VertexData, q2: VertexData): Boolean{
         // Iterate each triangle of the object
