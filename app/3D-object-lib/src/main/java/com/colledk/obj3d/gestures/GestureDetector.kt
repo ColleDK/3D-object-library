@@ -33,8 +33,10 @@ internal class GestureDetector(
     )
 
     override fun handleMotionEvent(event: MotionEvent): Boolean {
+        // First we call the pinch gesture handler
         scaleDetector.onTouchEvent(event)
 
+        // If there was no pinch action then we check for other user inputs
         if (!scaleDetector.isInProgress){
             when(event.action){
                 MotionEvent.ACTION_DOWN -> {
@@ -46,6 +48,7 @@ internal class GestureDetector(
                 }
                 MotionEvent.ACTION_MOVE -> {
                     if (currentTouchMode != TouchMode.MULTITOUCH){
+                        // When the user moves their finger we calculate the offset from the point they touched and use it as the rotation
                         currentTouchMode = TouchMode.MOVE
                         val dx = event.x - previousX
                         val dy = event.y - previousY
@@ -58,7 +61,7 @@ internal class GestureDetector(
                 }
                 MotionEvent.ACTION_UP -> {
                     when(currentTouchMode){
-                        TouchMode.PRESS -> { // The last user input was a single press so we look for ray intersection
+                        TouchMode.PRESS -> {
                             listener.onClick(previousX, previousY)
                         }
                         else -> { /* Do nothing */ }
@@ -66,15 +69,18 @@ internal class GestureDetector(
                     currentTouchMode = TouchMode.NONE
                 }
                 MotionEvent.ACTION_POINTER_DOWN -> {
+                    // User adds a 2nd finger to the input
                     currentTouchMode = TouchMode.MULTITOUCH
                 }
                 MotionEvent.ACTION_POINTER_UP -> {
+                    // Make sure the last input was multitouch (could be false positive)
                     if (currentTouchMode == TouchMode.MULTITOUCH){
                         currentTouchMode = TouchMode.NONE
                     }
                 }
             }
         }
+        // We handled the event so we return true
         return true
     }
 

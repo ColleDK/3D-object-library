@@ -29,6 +29,7 @@ object MathUtil {
         return dot / 6
     }
 
+    // Check if all elements have the same sign (-/+)
     internal fun hasSameSign(vararg elements: Float): Boolean {
         val filteredElements = elements.filter { it < 0f }
         return filteredElements.isEmpty() || filteredElements.size == elements.size

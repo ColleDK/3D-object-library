@@ -12,9 +12,11 @@ import java.io.InputStream
 
 internal class ObjectFileParser {
     suspend fun parseURL(url: String, scale: Int = 1, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO) {
+        // Get the data from the url
         val apiService = ApiClient.getClient()
         val body = apiService.getFromUrl(url = url).body()
 
+        // Create an inputstream from the responsebody
         body?.byteStream()?.let {
             return@withContext parseStream(inputStream = it, scale = scale, onFinish = onFinish)
         } ?: run {
@@ -157,19 +159,17 @@ internal class ObjectFileParser {
         // First we retrieve the data from the line
         val lineData = FACE_DATA_REGEX.findAll(line).map { it.value }.toList()
 
+        // First we retrieve the indeces for the vertices
         val indeces = if (lineData.all { it.contains("/") }){
-            // First we retrieve the indeces for the vertices
             lineData.map { it.split("/")[0].toInt() - 1 }
         } else {
-            // First we retrieve the indeces for the vertices
             lineData.map { it.toInt() - 1 }
         }
 
+        // First we retrieve the indeces for the normals
         val normalIndeces: MutableList<Int>? = if (lineData.all { it.contains("/") }){
-            // First we retrieve the indeces for the vertices
             lineData.map { it.split("/")[2].toInt() - 1 }.toMutableList()
         } else {
-            // First we retrieve the indeces for the vertices
             null
         }
 
@@ -323,16 +323,16 @@ internal class ObjectFileParser {
     }
 
     companion object{
-        val VERTEX_REGEX = "v[ ]+([-+]?[0-9]+(.[0-9]+)?([ ]*)?){3,4}".toRegex()
-        val VERTEX_DATA_REGEX = "[-+]?[0-9]+(.[0-9]+)?".toRegex()
-        val FACE_REGEX = "f[ ]+(\\d+([/]+\\d+)*[ ]*){3}".toRegex()
-        val FACE_REGEX_NOT_TRIANGULATED = "f[ ]+(\\d+([/]+\\d+)*[ ]*)+".toRegex()
+        val VERTEX_REGEX = "v\\s+([-+]?\\d+(.\\d+)?(\\s*)?){3,4}".toRegex()
+        val VERTEX_DATA_REGEX = "[-+]?\\d+(.\\d+)?".toRegex()
+        val FACE_REGEX = "f\\s+(\\d+([/]+\\d+)*\\s*){3}".toRegex()
+        val FACE_REGEX_NOT_TRIANGULATED = "f\\s+(\\d+([/]+\\d+)*\\s*)+".toRegex()
         val FACE_DATA_REGEX = "(\\d+([/]+\\d+)*)".toRegex()
-        val VERTEX_NORMAL_REGEX = "vn[ ]+([-+]?[0-9]+(.[0-9]+)?([ ]*)?){3,4}".toRegex()
-        val VERTEX_NORMAL_DATA_REGEX = "[-+]?[0-9]+(.[0-9]+)?".toRegex()
-        val OBJECT_REGEX = "g[ ]+[\\w_ ]+".toRegex()
+        val VERTEX_NORMAL_REGEX = "vn\\s+([-+]?\\d+(.\\d+)?(\\s*)?){3,4}".toRegex()
+        val VERTEX_NORMAL_DATA_REGEX = "[-+]?\\d+(.\\d+)?".toRegex()
+        val OBJECT_REGEX = "g\\s+[\\w_ ]+".toRegex()
         val OBJECT_DATA_REGEX = "[\\w_ ]+".toRegex()
-        val MATERIAL_REGEX = "usemtl[ ]+[\\w: ]+".toRegex()
+        val MATERIAL_REGEX = "usemtl\\s+[\\w: ]+".toRegex()
         val MATERIAL_DATA_REGEX = "[\\w:]+".toRegex()
     }
 }
