@@ -13,7 +13,7 @@ class ParserUnitTest {
         val stream = MockedParserData.objectDataString.byteInputStream()
 
         val data = runBlocking {
-            ObjectFileParser().parseStream(stream, onFinish = {})
+            ObjectFileParser().parseStream(stream) {}
         }
 
         assert(data.vertices == MockedParserData.parsedData.vertices)
@@ -26,7 +26,7 @@ class ParserUnitTest {
         val stream = MockedParserData.objectDataString.byteInputStream()
 
         val data = runBlocking {
-            ObjectFileParser().parseStream(stream, onFinish = {})
+            ObjectFileParser().parseStream(stream) {}
         }
 
         assert(data.faces == MockedParserData.parsedData.faces)

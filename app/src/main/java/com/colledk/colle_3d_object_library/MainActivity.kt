@@ -70,16 +70,14 @@ class MainActivity : AppCompatActivity() {
                             scope.launch {
                                 loadMaterial(resourceId = R.raw.cubemtl)
                                 loadObject(
-                                    resourceId = descriptions.value[currentIndex.value].resourceId,
-                                    scale = descriptions.value[currentIndex.value].scale,
-                                    onFinish = {
-                                        scope.launch {
-                                            scaffoldState.snackbarHostState.showSnackbar(
-                                                "Loaded object ${descriptions.value[currentIndex.value].name}"
-                                            )
-                                        }
+                                    resourceId = descriptions.value[currentIndex.value].resourceId
+                                ) {
+                                    scope.launch {
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            "Loaded object ${descriptions.value[currentIndex.value].name}"
+                                        )
                                     }
-                                )
+                                }
                                 setObjectClickCallback { viewModel.setShouldOpenDialog(it) }
                                 setCameraPosition(x = 1f, y = 1f, z = 1f)
                             }
@@ -207,8 +205,7 @@ fun ObjectChooser(
 
                     loadingObjectCallback(currentObject.name)
                     glView?.loadObject(
-                        resourceId = currentObject.resourceId,
-                        scale = currentObject.scale
+                        resourceId = currentObject.resourceId
                     ) {
                         onFinishLoading(currentObject.name)
                         canSwitchObject = true
@@ -265,8 +262,7 @@ fun ObjectChooser(
 
                     loadingObjectCallback(currentObject.name)
                     glView?.loadObject(
-                        resourceId = currentObject.resourceId,
-                        scale = currentObject.scale
+                        resourceId = currentObject.resourceId
                     ) {
                         onFinishLoading(currentObject.name)
                         canSwitchObject = true
