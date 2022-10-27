@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
                     AndroidView(factory = { ctx ->
                         glView = ObjectSurfaceView(ctx).apply {
                             scope.launch {
-                                loadMaterial(R.raw.cubemtl)
+                                loadMaterial(resourceId = R.raw.cubemtl)
                                 loadObject(
                                     resourceId = descriptions.value[currentIndex.value].resourceId,
                                     scale = descriptions.value[currentIndex.value].scale,
@@ -81,16 +81,14 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 )
                                 setObjectClickCallback { viewModel.setShouldOpenDialog(it) }
-                                setCameraPosition(1f, 1f, 1f)
+                                setCameraPosition(x = 1f, y = 1f, z = 1f)
                             }
                         }
                         glView!!
                     })
 
-                    if (shouldOpen.value){
-                        Dialog(onDismissRequest = { viewModel.setShouldOpenDialog(value = false) }) {
-                            Text(text = descriptions.value[currentIndex.value].description)
-                        }
+                    DescriptionDialog(shouldOpen = shouldOpen.value, currentDescription = descriptions.value[currentIndex.value].description) {
+                        viewModel.setShouldOpenDialog(value = false)
                     }
 
                     ColorChooser(
@@ -117,7 +115,7 @@ class MainActivity : AppCompatActivity() {
                             loadingObjectCallback = {
                                 scope.launch {
                                     scaffoldState.snackbarHostState.showSnackbar(
-                                        "Loading object $it"
+                                        "Loading object $it\nPlease wait while it is loading!"
                                     )
                                 }
                             },
@@ -128,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                                     )
                                 }
                             },
-                            viewModel = viewModel
+                            viewModel = viewModel,
                         )
                     }
                 }
@@ -139,7 +137,10 @@ class MainActivity : AppCompatActivity() {
 }
 
 @Composable
-fun ColorChooser(glView: ObjectSurfaceView? = null, modifier: Modifier = Modifier) {
+fun ColorChooser(
+    modifier: Modifier = Modifier,
+    glView: ObjectSurfaceView? = null,
+) {
     val colorNames = mapOf(
         floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f) to "Cyan",
         floatArrayOf(1.0f, 0.0f, 0.0f, 1.0f) to "Red",
@@ -178,13 +179,18 @@ fun DescriptionDialog(shouldOpen: Boolean, currentDescription: String, onDismiss
 
 @Composable
 fun ObjectChooser(
+    modifier: Modifier = Modifier,
     scope: CoroutineScope,
     viewModel: MainViewModel,
     glView: ObjectSurfaceView? = null,
-    modifier: Modifier = Modifier,
     loadingObjectCallback: (name: String) -> Unit = {},
     onFinishLoading: (name: String) -> Unit = {}
 ) {
+
+    var canSwitchObject by remember{
+        mutableStateOf(true)
+    }
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -195,13 +201,18 @@ fun ObjectChooser(
         Button(
             onClick = {
                 scope.launch {
+                    canSwitchObject = false
                     viewModel.goToPreviousObject()
                     val currentObject = viewModel.descriptions.value[viewModel.currentObjectIndex.value]
 
+                    loadingObjectCallback(currentObject.name)
                     glView?.loadObject(
-                        currentObject.resourceId,
-                        currentObject.scale
-                    ) { onFinishLoading(currentObject.name) }
+                        resourceId = currentObject.resourceId,
+                        scale = currentObject.scale
+                    ) {
+                        onFinishLoading(currentObject.name)
+                        canSwitchObject = true
+                    }
                 }
             },
             modifier = Modifier
@@ -212,7 +223,8 @@ fun ObjectChooser(
                     RoundedCornerShape(20.dp)
                 ),
             colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
-            shape = RoundedCornerShape(20.dp)
+            shape = RoundedCornerShape(20.dp),
+            enabled = canSwitchObject
         ) {
             Image(
                 imageVector = Icons.Filled.KeyboardArrowLeft,
@@ -246,14 +258,19 @@ fun ObjectChooser(
         Button(
             onClick = {
                 scope.launch {
+                    canSwitchObject = false
                     viewModel.goToNextObject()
 
                     val currentObject = viewModel.descriptions.value[viewModel.currentObjectIndex.value]
 
+                    loadingObjectCallback(currentObject.name)
                     glView?.loadObject(
-                        currentObject.resourceId,
-                        currentObject.scale
-                    )
+                        resourceId = currentObject.resourceId,
+                        scale = currentObject.scale
+                    ) {
+                        onFinishLoading(currentObject.name)
+                        canSwitchObject = true
+                    }
                 }
             },
             modifier = Modifier
@@ -264,7 +281,8 @@ fun ObjectChooser(
                     RoundedCornerShape(20.dp)
                 ),
             colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
-            shape = RoundedCornerShape(20.dp)
+            shape = RoundedCornerShape(20.dp),
+            enabled = canSwitchObject
         ) {
             Image(
                 imageVector = Icons.Filled.KeyboardArrowRight,

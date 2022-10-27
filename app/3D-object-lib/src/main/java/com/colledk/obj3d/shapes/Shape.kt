@@ -76,7 +76,6 @@ internal class Shape(
         array.toIntArray()
     }
 
-    // TODO transform to uniform color
     private val colors: () -> FloatArray = {
         val array = mutableListOf<Float>()
 
@@ -319,30 +318,59 @@ internal class Shape(
 
     internal fun prepareHandles(){
         // Attribute handles
-        aPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition").also { checkForHandleError(it, "Position") }
-        aNormalHandle = GLES20.glGetAttribLocation(mProgram, "aNormal").also { checkForHandleError(it, "Normal") }
-        aColorHandle = GLES20.glGetAttribLocation(mProgram, "aColor").also { checkForHandleError(it, "Color") }
+        aPositionHandle = getAttrLocation(mProgram, "aPosition")
+        aNormalHandle = getAttrLocation(mProgram, "aNormal")
+        aColorHandle = getAttrLocation(mProgram, "aColor")
 
         // Uniform handles
-        aDiffuseHandle = GLES20.glGetAttribLocation(mProgram, "aDiffuse").also { checkForHandleError(it, "Diffuse") }
-        aAmbientHandle = GLES20.glGetAttribLocation(mProgram, "aAmbient").also { checkForHandleError(it, "Ambient") }
-        aEmissiveHandle = GLES20.glGetAttribLocation(mProgram, "aEmissive").also { checkForHandleError(it, "Emissive") }
-        aSpecularHandle = GLES20.glGetAttribLocation(mProgram, "aSpecular").also { checkForHandleError(it, "Specular") }
-        aShininessHandle = GLES20.glGetAttribLocation(mProgram, "aShininess").also { checkForHandleError(it, "Shininess") }
-        aOpacityHandle = GLES20.glGetAttribLocation(mProgram, "aOpacity").also { checkForHandleError(it, "Opacity") }
+        aDiffuseHandle = getAttrLocation(mProgram, "aDiffuse")
+        aAmbientHandle = getAttrLocation(mProgram, "aAmbient")
+        aEmissiveHandle = getAttrLocation(mProgram, "aEmissive")
+        aSpecularHandle = getAttrLocation(mProgram, "aSpecular")
+        aShininessHandle = getAttrLocation(mProgram, "aShininess")
+        aOpacityHandle = getAttrLocation(mProgram, "aOpacity")
 
-        uLightPositionHandle = GLES20.glGetUniformLocation(mProgram, "uLightPosition").also { checkForHandleError(it, "Light position") }
-        uProjectionMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uProjectionMatrix").also { checkForHandleError(it, "Projection matrix") }
-        uViewMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uViewMatrix").also { checkForHandleError(it, "View matrix") }
-        uModelMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uModelMatrix").also { checkForHandleError(it, "Model matrix") }
-        uNormalMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uNormalMatrix").also { checkForHandleError(it, "Normal matrix") }
-        uCameraPositionHandle = GLES20.glGetUniformLocation(mProgram, "uCameraPosition").also { checkForHandleError(it, "Camera position") }
+        uLightPositionHandle = getUnifLocation(mProgram, "uLightPosition")
+        uProjectionMatrixHandle = getUnifLocation(mProgram, "uProjectionMatrix")
+        uViewMatrixHandle = getUnifLocation(mProgram, "uViewMatrix")
+        uModelMatrixHandle = getUnifLocation(mProgram, "uModelMatrix")
+        uNormalMatrixHandle = getUnifLocation(mProgram, "uNormalMatrix")
+        uCameraPositionHandle = getUnifLocation(mProgram, "uCameraPosition")
     }
 
-    internal fun checkForHandleError(handle: Int, name: String = ""){
-        if (handle == -1){
-            Timber.e("Error loading handle $name")
-        }
+    private fun enableVertexArrays(){
+        GLES20.glEnableVertexAttribArray(aPositionHandle)
+        GLES20.glEnableVertexAttribArray(aNormalHandle)
+        GLES20.glEnableVertexAttribArray(aColorHandle)
+        GLES20.glEnableVertexAttribArray(aDiffuseHandle)
+        GLES20.glEnableVertexAttribArray(aAmbientHandle)
+        GLES20.glEnableVertexAttribArray(aEmissiveHandle)
+        GLES20.glEnableVertexAttribArray(aSpecularHandle)
+        GLES20.glEnableVertexAttribArray(aShininessHandle)
+        GLES20.glEnableVertexAttribArray(aOpacityHandle)
+    }
+
+    private fun disableVertexArrays(){
+        GLES20.glDisableVertexAttribArray(aPositionHandle)
+        GLES20.glDisableVertexAttribArray(aNormalHandle)
+        GLES20.glDisableVertexAttribArray(aColorHandle)
+        GLES20.glDisableVertexAttribArray(aDiffuseHandle)
+        GLES20.glDisableVertexAttribArray(aAmbientHandle)
+        GLES20.glDisableVertexAttribArray(aEmissiveHandle)
+        GLES20.glDisableVertexAttribArray(aSpecularHandle)
+        GLES20.glDisableVertexAttribArray(aShininessHandle)
+        GLES20.glDisableVertexAttribArray(aOpacityHandle)
+    }
+
+    private fun prepareFloatAttrPointer(handle: Int, coordsPerInput: Int, buffer: FloatBuffer){
+        GLES20.glVertexAttribPointer(
+            handle,
+            coordsPerInput,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            buffer
+        )
     }
 
     // Create draw functionality
@@ -366,111 +394,24 @@ internal class Shape(
         GLES20.glUniformMatrix4fv(uNormalMatrixHandle, 1, false, normalMatrix, 0)
 
         // Enable the attribute arrays
-        GLES20.glEnableVertexAttribArray(aPositionHandle)
-        GLES20.glEnableVertexAttribArray(aNormalHandle)
-        GLES20.glEnableVertexAttribArray(aColorHandle)
-        GLES20.glEnableVertexAttribArray(aDiffuseHandle)
-        GLES20.glEnableVertexAttribArray(aAmbientHandle)
-        GLES20.glEnableVertexAttribArray(aEmissiveHandle)
-        GLES20.glEnableVertexAttribArray(aSpecularHandle)
-        GLES20.glEnableVertexAttribArray(aShininessHandle)
-        GLES20.glEnableVertexAttribArray(aOpacityHandle)
+        enableVertexArrays()
 
         // Prepare position attributes
-        GLES20.glVertexAttribPointer(
-            aPositionHandle,
-            COORDS_PER_VERTEX,
-            GLES20.GL_FLOAT,
-            false,
-            0,
-            vertexBuffer
-        )
-
-        GLES20.glVertexAttribPointer(
-            aNormalHandle,
-            COORDS_PER_VERTEX,
-            GLES20.GL_FLOAT,
-            false,
-            0,
-            normalBuffer
-        )
-
-        GLES20.glVertexAttribPointer(
-            aColorHandle,
-            COORDS_PER_COLOR,
-            GLES20.GL_FLOAT,
-            false,
-            0,
-            colorBuffer
-        )
-
-        GLES20.glVertexAttribPointer(
-            aDiffuseHandle,
-            COORDS_PER_VERTEX,
-            GLES20.GL_FLOAT,
-            false,
-            0,
-            diffuseBuffer
-        )
-
-        GLES20.glVertexAttribPointer(
-            aAmbientHandle,
-            COORDS_PER_VERTEX,
-            GLES20.GL_FLOAT,
-            false,
-            0,
-            ambientBuffer
-        )
-
-        GLES20.glVertexAttribPointer(
-            aEmissiveHandle,
-            COORDS_PER_VERTEX,
-            GLES20.GL_FLOAT,
-            false,
-            0,
-            emissiveBuffer
-        )
-
-        GLES20.glVertexAttribPointer(
-            aSpecularHandle,
-            COORDS_PER_VERTEX,
-            GLES20.GL_FLOAT,
-            false,
-            0,
-            specularBuffer
-        )
-
-        GLES20.glVertexAttribPointer(
-            aShininessHandle,
-            COORDS_PER_MATERIAL,
-            GLES20.GL_FLOAT,
-            false,
-            0,
-            shininessBuffer
-        )
-
-        GLES20.glVertexAttribPointer(
-            aOpacityHandle,
-            COORDS_PER_MATERIAL,
-            GLES20.GL_FLOAT,
-            false,
-            0,
-            opacityBuffer
-        )
+        prepareFloatAttrPointer(aPositionHandle, COORDS_PER_VERTEX, vertexBuffer)
+        prepareFloatAttrPointer(aNormalHandle, COORDS_PER_VERTEX, normalBuffer)
+        prepareFloatAttrPointer(aColorHandle, COORDS_PER_COLOR, colorBuffer)
+        prepareFloatAttrPointer(aDiffuseHandle, COORDS_PER_VERTEX, diffuseBuffer)
+        prepareFloatAttrPointer(aAmbientHandle, COORDS_PER_VERTEX, ambientBuffer)
+        prepareFloatAttrPointer(aEmissiveHandle, COORDS_PER_VERTEX, emissiveBuffer)
+        prepareFloatAttrPointer(aSpecularHandle, COORDS_PER_VERTEX, specularBuffer)
+        prepareFloatAttrPointer(aShininessHandle, COORDS_PER_MATERIAL, shininessBuffer)
+        prepareFloatAttrPointer(aOpacityHandle, COORDS_PER_MATERIAL, opacityBuffer)
 
         // Draw the object
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder().size, GLES20.GL_UNSIGNED_INT, drawBuffer)
 
         // Disable the attribute arrays
-        GLES20.glDisableVertexAttribArray(aPositionHandle)
-        GLES20.glDisableVertexAttribArray(aNormalHandle)
-        GLES20.glDisableVertexAttribArray(aColorHandle)
-        GLES20.glDisableVertexAttribArray(aDiffuseHandle)
-        GLES20.glDisableVertexAttribArray(aAmbientHandle)
-        GLES20.glDisableVertexAttribArray(aEmissiveHandle)
-        GLES20.glDisableVertexAttribArray(aSpecularHandle)
-        GLES20.glDisableVertexAttribArray(aShininessHandle)
-        GLES20.glDisableVertexAttribArray(aOpacityHandle)
+        disableVertexArrays()
     }
 
     companion object{
