@@ -69,13 +69,11 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      */
     suspend fun loadObject(
         resourceId: Int,
-        scale: Int = 1,
         onFinish: () -> Unit = {}
     ) {
         // Load in the data from the parser
         val data = ObjectFileParser().parseStream(
             inputStream = context.resources.openRawResource(resourceId),
-            scale = scale,
             onFinish = onFinish
         )
 
@@ -92,13 +90,11 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      */
     suspend fun loadObject(
         url: String,
-        scale: Int = 1,
         onFinish: () -> Unit = {}
     ) {
         // Load in the data from the parser
         val data = ObjectFileParser().parseURL(
             url = url,
-            scale = scale,
             onFinish = onFinish
         )
 
