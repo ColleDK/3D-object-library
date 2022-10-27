@@ -105,7 +105,7 @@ internal class ObjectFileParser {
         val maxVertexZ = vertices.maxOf { abs(it.z) }
         val maxVertexVal = max(maxVertexX, max(maxVertexY, maxVertexZ))
 
-        val homogenousVertices = vertices.map { it / (maxVertexVal / 4) }
+        val homogenousVertices = vertices.map { it / maxVertexVal }
 
         return@withContext ObjectData(
             vertices = homogenousVertices,
