@@ -1,5 +1,7 @@
 package com.colledk.obj3d.shapes
 
+import android.opengl.GLES20
+import timber.log.Timber
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -31,5 +33,19 @@ fun createIntBuffer(array: () -> IntArray): IntBuffer {
 
             position(0)
         }
+    }
+}
+
+fun getAttrLocation(mProgram: Int, name: String): Int {
+    return GLES20.glGetAttribLocation(mProgram, name).also { checkForHandleError(it, name) }
+}
+
+fun getUnifLocation(mProgram: Int, name: String): Int {
+    return GLES20.glGetUniformLocation(mProgram, name).also { checkForHandleError(it, name) }
+}
+
+internal fun checkForHandleError(handle: Int, name: String = ""){
+    if (handle == -1){
+        Timber.e("Error loading handle $name")
     }
 }
