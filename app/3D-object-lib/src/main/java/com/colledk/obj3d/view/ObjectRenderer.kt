@@ -58,6 +58,10 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
     @Volatile
     var zoomVal: Float = frustumFar - frustumNear
 
+    // The current way to calculate intersection between ray and object
+    @Volatile
+    var intersectionMode: ObjectSurfaceView.IntersectionMode = ObjectSurfaceView.IntersectionMode.MOLLER_TRUMBORE
+
     // Define our matrices in a 4D spectrum (4x4)
     private val projectionMatrix = FloatArray(16)
     private val viewMatrix = FloatArray(16)
@@ -277,58 +281,62 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             val near = floatArrayOf(nearPos[0] / nearPos[3], nearPos[1] / nearPos[3], nearPos[2] / nearPos[3])
             val far = floatArrayOf(farPos[0] / farPos[3], farPos[1] / farPos[3], farPos[2] / farPos[3])
 
-//            val inverseMVPMatrix = FloatArray(16)
-//            Matrix.invertM(inverseMVPMatrix, 0, mvpMatrix, 0)
-//
-//            mollerTrumboreIntersection(
-//                origin = near.toVertexData(),
-//                rayDir = (far.toVertexData() - near.toVertexData()).normalize()
-//            )
-            return checkRayPickingIntersection(q1 = near.toVertexData(), q2 = far.toVertexData())
+            return when(intersectionMode){
+                ObjectSurfaceView.IntersectionMode.TETRAHEDRON_VOLUME -> {
+                    checkRayPickingIntersection(q1 = near.toVertexData(), q2 = far.toVertexData())
+                }
+                ObjectSurfaceView.IntersectionMode.MOLLER_TRUMBORE -> {
+                    mollerTrumboreIntersection(
+                        origin = near.toVertexData(),
+                        rayDir = (far.toVertexData() - near.toVertexData()).normalize()
+                    )
+                }
+            }
         }
         return false.also { Timber.e("Failed to unproject coordinates for mouse click {$mouseX, $mouseY}\nReceived unprojected data: {$unProjectedNearPos, $unProjectedFarPos}") }
     }
 
-//    private fun mollerTrumboreIntersection(origin: VertexData, rayDir: VertexData){
-//        data?.faces?.forEach { face ->
-//            // The the current vertices
-//            val v1 = data?.vertices?.getOrNull(face.vertexIndeces[0])
-//            val v2 = data?.vertices?.getOrNull(face.vertexIndeces[1])
-//            val v3 = data?.vertices?.getOrNull(face.vertexIndeces[2])
-//
-//            val (p1, p2, p3) = allLet(v1, v2, v3) {
-//                Timber.e("Cannot calculate ray picking intersection with null objects {$v1, $v2, $v3}")
-//                return
-//            }
-//
-//            val edge1 = p2 - p1
-//            val edge2 = p3 - p1
-//
-//            val epsilon = 0.000001f
-//
-//            val p = rayDir.crossProduct(edge2)
-//            val det = edge1.dotProduct(p)
-//
-//            if (det <= -epsilon || det >= epsilon) {
-//                val invDet = 1f / det
-//                val t = origin - p1
-//
-//                val u = t.dotProduct(p) * invDet
-//
-//                if (u in 0f..1f) {
-//                    val q = t.crossProduct(edge1)
-//                    val v = rayDir.dotProduct(q) * invDet
-//
-//                    if (v >= 0f && u + v <= 1f) {
-//                        val t2 = edge2.dotProduct(q) * invDet
-//                        if (t2 > epsilon){
-//                            Timber.d("Triangle intersected with ray!")
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
+    private fun mollerTrumboreIntersection(origin: VertexData, rayDir: VertexData): Boolean{
+        data?.faces?.forEach { face ->
+            // The the current vertices
+            val v1 = data?.vertices?.getOrNull(face.vertexIndeces[0])
+            val v2 = data?.vertices?.getOrNull(face.vertexIndeces[1])
+            val v3 = data?.vertices?.getOrNull(face.vertexIndeces[2])
+
+            val (p1, p2, p3) = allLet(v1, v2, v3) {
+                Timber.e("Cannot calculate ray picking intersection with null objects {$v1, $v2, $v3}")
+                return false
+            }
+
+            val edge1 = p2 - p1
+            val edge2 = p3 - p1
+
+            val epsilon = 0.000001f
+
+            val p = rayDir.crossProduct(edge2)
+            val det = edge1.dotProduct(p)
+
+            if (det <= -epsilon || det >= epsilon) {
+                val invDet = 1f / det
+                val t = origin - p1
+
+                val u = t.dotProduct(p) * invDet
+
+                if (u in 0f..1f) {
+                    val q = t.crossProduct(edge1)
+                    val v = rayDir.dotProduct(q) * invDet
+
+                    if (v >= 0f && u + v <= 1f) {
+                        val t2 = edge2.dotProduct(q) * invDet
+                        if (t2 > epsilon){
+                            return true
+                        }
+                    }
+                }
+            }
+        }
+        return false
+    }
 
     private fun checkRayPickingIntersection(q1: VertexData, q2: VertexData): Boolean{
         // Iterate each triangle of the object

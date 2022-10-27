@@ -126,7 +126,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
     /**
      * Function for attaching a material file from a url to the current object.
-     * @param url The full path of the url that the file should be loaded from (i.e. https://localhost:8000/x.obj).
+     * @param url The full path of the url that the file should be loaded from (i.e. https://localhost:8000/x.mtl).
      * @param onFinish Callback for when the file has finished loading.
      */
     suspend fun loadMaterial(
@@ -247,6 +247,17 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         hitObjectCallback = callback
     }
 
+    /**
+     * Function for setting the current mode for calculating the intersection between the object and user inputs.
+     * The following 2 modes have been implemented and can be used.
+     * [IntersectionMode.TETRAHEDRON_VOLUME] - Calculates the intersection by checking the signed volume between the user input and the triangles from the object.
+     * [IntersectionMode.MOLLER_TRUMBORE] - Calculates the intersection by using the Möller-Trumbore fast intersection algorithm.
+     * @param mode The current mode that the intersection should be calculated with.
+     */
+    fun setIntersectionCalculationMode(mode: IntersectionMode = IntersectionMode.MOLLER_TRUMBORE){
+        renderer.intersectionMode = mode
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean =
         gestureDetector.handleMotionEvent(event = event)
 
@@ -256,5 +267,10 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
     private fun renderLayout() {
         requestLayout()
+    }
+
+    enum class IntersectionMode{
+        MOLLER_TRUMBORE,
+        TETRAHEDRON_VOLUME
     }
 }
