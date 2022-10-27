@@ -5,6 +5,10 @@ import android.graphics.Color
 import android.opengl.GLSurfaceView
 import android.os.Build
 import android.view.MotionEvent
+import androidx.room.Room
+import com.colledk.obj3d.db.ObjectDatabase
+import com.colledk.obj3d.db.mapToDomain
+import com.colledk.obj3d.db.mapToLocal
 import com.colledk.obj3d.gestures.GestureDetector
 import com.colledk.obj3d.gestures.IGestureDetector
 import com.colledk.obj3d.parser.MaterialFileParser
@@ -69,7 +73,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      */
     suspend fun loadObject(
         resourceId: Int,
-        onFinish: () -> Unit = {}
+        onFinish: () -> Unit = {},
     ) {
         // Load in the data from the parser
         val data = ObjectFileParser().parseStream(
@@ -90,8 +94,9 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      */
     suspend fun loadObject(
         url: String,
-        onFinish: () -> Unit = {}
+        onFinish: () -> Unit = {},
     ) {
+
         // Load in the data from the parser
         val data = ObjectFileParser().parseURL(
             url = url,
