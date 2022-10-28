@@ -14,6 +14,8 @@ import com.colledk.obj3d.gestures.IGestureDetector
 import com.colledk.obj3d.parser.MaterialFileParser
 import com.colledk.obj3d.parser.ObjectFileParser
 import com.colledk.obj3d.parser.data.VertexData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
@@ -82,30 +84,29 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         objectName: String? = null,
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {},
-    ) {
+    ) = withContext(Dispatchers.IO) {
         // Check if the object should be stored/loaded in the DB
         val data = when(objectName){
             // Load in the data from the parser
             null -> {
                 ObjectFileParser().parseStream(
-                    inputStream = context.resources.openRawResource(resourceId),
-                    onFinish = onFinish
+                    inputStream = context.resources.openRawResource(resourceId)
                 )
             }
             else -> {
                 // If we should override the existing object we read the file
                 if (overrideIfExists){
                     ObjectFileParser().parseStream(
-                        inputStream = context.resources.openRawResource(resourceId),
-                        onFinish = onFinish
+                        inputStream = context.resources.openRawResource(resourceId)
                     ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
                 } else { // Else we load in the object from the DB
-                    db.objectDao().getSpecificObject(name = objectName)?.mapToDomain()?.also { onFinish() } ?: run {
-                        Timber.e("An error occurred when reading the object from the database. Going into fallback by reading file!")
+                    db.objectDao().getSpecificObject(name = objectName)?.mapToDomain()?.also {
+                        Timber.d("Finished loading object from database")
+                    } ?: run {
+                        Timber.e("An error occurred when reading the object from the database, or the object does not exist in the database yet. Going into fallback by reading file!")
                         // If any error happens and we receive a null object, we just load the file
                         ObjectFileParser().parseStream(
-                            inputStream = context.resources.openRawResource(resourceId),
-                            onFinish = onFinish
+                            inputStream = context.resources.openRawResource(resourceId)
                         ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
                     }
                 }
@@ -115,7 +116,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         // Set the data on the renderer
         renderer.setObject(data = data)
         // Update the view with the new data
-        renderObject()
+        renderObject().also { onFinish() }
     }
 
     /**
@@ -130,19 +131,18 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         objectName: String? = null,
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {},
-    ) {
+    ) = withContext(Dispatchers.IO)  {
 
         // Load in the data from the parser
         val data = ObjectFileParser().parseURL(
             url = url,
-            onFinish = onFinish
         )
 
         // Set the data on the renderer
         renderer.setObject(data = data)
 
         // Update the view with the new data
-        renderObject()
+        renderObject().also { onFinish() }
     }
 
     /**
@@ -157,15 +157,14 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         materialName: String? = null,
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {}
-    ) {
+    ) = withContext(Dispatchers.IO)  {
         val materials = MaterialFileParser().parseStream(
             inputStream = context.resources.openRawResource(resourceId),
-            onFinish = onFinish
         )
 
         renderer.attachMaterials(materials = materials)
 
-        renderObject()
+        renderObject().also { onFinish() }
     }
 
     /**
@@ -180,15 +179,14 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         materialName: String? = null,
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {}
-    ) {
+    ) = withContext(Dispatchers.IO)  {
         val materials = MaterialFileParser().parseURL(
             url = url,
-            onFinish = onFinish
         )
 
         renderer.attachMaterials(materials = materials)
 
-        renderObject()
+        renderObject().also { onFinish() }
     }
 
     /**
