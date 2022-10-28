@@ -13,6 +13,9 @@ import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.parser.data.VertexData
 import com.colledk.obj3d.shapes.Shape
 import com.colledk.obj3d.shapes.ShapeUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -212,6 +215,22 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             shouldUpdateShape = true,
             shouldUpdateColor = renderUpdate.shouldUpdateColor
         )
+    }
+
+    suspend fun setObjectColor(color: FloatArray) = withContext(Dispatchers.IO) {
+        async {
+            val newFaces = data?.faces?.map { it.copy(color = color) } ?: listOf()
+            val newData = data?.copy(faces = newFaces)
+            setObject(newData)
+        }
+    }
+
+    suspend fun setObjectGroupColor(color: FloatArray, name: String) = withContext(Dispatchers.IO) {
+        async {
+            val newFaces = data?.faces?.map { if (it.objectGroupName == name) it.copy(color = color) else it } ?: listOf()
+            val newData = data?.copy(faces = newFaces)
+            setObject(newData)
+        }
     }
 
     fun setBackground() {

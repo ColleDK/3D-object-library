@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import timber.log.Timber
 
 class MainViewModel(): ViewModel() {
 
@@ -20,33 +19,28 @@ class MainViewModel(): ViewModel() {
     init {
         _descriptions.value = listOf(
             ObjectDescription(
+                resourceId = R.raw.minicooper,
+                name = "Car",
+                description = "This is a very cool description of the car."
+            ),
+            ObjectDescription(
                 resourceId = R.raw.cube,
                 name = "Cube",
-                scale = 1,
                 description = "This is a very cool description of the cube."
             ),
             ObjectDescription(
                 resourceId = R.raw.human,
                 name = "Human",
-                scale = 5,
                 description = "This is a very cool description of the human."
-            ),
-            ObjectDescription(
-                resourceId = R.raw.minicooper,
-                name = "Car",
-                scale = 20,
-                description = "This is a very cool description of the car."
             ),
             ObjectDescription(
                 resourceId = R.raw.dragon,
                 name = "Dragon",
-                scale = 5,
                 description = "This is a very cool description of the dragon."
             ),
             ObjectDescription(
                 resourceId = R.raw.chair,
                 name = "Chair",
-                scale = 5,
                 description = "This is a very cool description of the chair."
             ),
         )
@@ -62,6 +56,10 @@ class MainViewModel(): ViewModel() {
 
     fun goToNextObject() {
         _currentObjectIndex.value = (_currentObjectIndex.value + 1) % _descriptions.value.size
+    }
+
+    fun goToObject(index: Int) {
+        _currentObjectIndex.value = index.coerceIn(0 until _descriptions.value.size)
     }
 
 }

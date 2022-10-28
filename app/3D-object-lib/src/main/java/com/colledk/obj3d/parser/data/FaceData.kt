@@ -4,7 +4,8 @@ internal data class FaceData(
     val vertexIndeces: List<Int>,
     val vertexNormalIndeces: List<Int>? = null,
     val color: FloatArray = floatArrayOf(0.7f, 0.7f, 0.7f),
-    val materialName: String = ""
+    val materialName: String = "",
+    val objectGroupName: String = "",
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
