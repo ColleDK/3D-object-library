@@ -70,7 +70,9 @@ class MainActivity : AppCompatActivity() {
                             scope.launch {
                                 loadMaterial(resourceId = R.raw.cubemtl)
                                 loadObject(
-                                    resourceId = descriptions.value[currentIndex.value].resourceId
+                                    resourceId = descriptions.value[currentIndex.value].resourceId,
+                                    objectName = descriptions.value[currentIndex.value].name,
+                                    overrideIfExists = false
                                 ) {
                                     scope.launch {
                                         scaffoldState.snackbarHostState.showSnackbar(
@@ -205,7 +207,8 @@ fun ObjectChooser(
 
                     loadingObjectCallback(currentObject.name)
                     glView?.loadObject(
-                        resourceId = currentObject.resourceId
+                        resourceId = currentObject.resourceId,
+                        objectName = currentObject.name
                     ) {
                         onFinishLoading(currentObject.name)
                         canSwitchObject = true
@@ -262,7 +265,8 @@ fun ObjectChooser(
 
                     loadingObjectCallback(currentObject.name)
                     glView?.loadObject(
-                        resourceId = currentObject.resourceId
+                        resourceId = currentObject.resourceId,
+                        objectName = currentObject.name
                     ) {
                         onFinishLoading(currentObject.name)
                         canSwitchObject = true

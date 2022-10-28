@@ -24,6 +24,8 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
     private var hitObjectCallback: (hitObject: Boolean) -> Unit = {}
 
+    private lateinit var db: ObjectDatabase
+
     init {
         // We define the current OpenGL version to be 2.0
         setEGLContextClientVersion(2)
@@ -37,6 +39,8 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         renderMode = RENDERMODE_WHEN_DIRTY
 
         createGestureDetector()
+
+        db = Room.databaseBuilder(context.applicationContext, ObjectDatabase::class.java, "3D-object db").build()
     }
 
     private fun createGestureDetector() {
@@ -70,16 +74,43 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * Function for loading a 3D object from a raw resource.
      * @param resourceId The resource id of the raw file containing the .obj file.
      * @param onFinish Callback for when the file has finished loading.
+     * @param objectName The name of the object, used for storing and loading it locally for optimization. If no name is given the object cannot be stored or loaded locally.
+     * @param overrideIfExists If [objectName] is given and set to true, the object will be loaded from the file and overrides the existing in the db. If set to false, then the object will be loaded from the db.
      */
     suspend fun loadObject(
         resourceId: Int,
+        objectName: String? = null,
+        overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {},
     ) {
-        // Load in the data from the parser
-        val data = ObjectFileParser().parseStream(
-            inputStream = context.resources.openRawResource(resourceId),
-            onFinish = onFinish
-        )
+        // Check if the object should be stored/loaded in the DB
+        val data = when(objectName){
+            // Load in the data from the parser
+            null -> {
+                ObjectFileParser().parseStream(
+                    inputStream = context.resources.openRawResource(resourceId),
+                    onFinish = onFinish
+                )
+            }
+            else -> {
+                // If we should override the existing object we read the file
+                if (overrideIfExists){
+                    ObjectFileParser().parseStream(
+                        inputStream = context.resources.openRawResource(resourceId),
+                        onFinish = onFinish
+                    ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
+                } else { // Else we load in the object from the DB
+                    db.objectDao().getSpecificObject(name = objectName)?.mapToDomain()?.also { onFinish() } ?: run {
+                        Timber.e("An error occurred when reading the object from the database. Going into fallback by reading file!")
+                        // If any error happens and we receive a null object, we just load the file
+                        ObjectFileParser().parseStream(
+                            inputStream = context.resources.openRawResource(resourceId),
+                            onFinish = onFinish
+                        ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
+                    }
+                }
+            }
+        }
 
         // Set the data on the renderer
         renderer.setObject(data = data)
@@ -91,9 +122,13 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * Function for loading a 3D object from a url.
      * @param url The full path of the url that the file should be loaded from (ex https://localhost:8000/x.obj).
      * @param onFinish Callback for when the file has finished loading.
+     * @param objectName The name of the object, used for storing and loading it locally for optimization. If no name is given the object cannot be stored or loaded locally.
+     * @param overrideIfExists If [objectName] is given and set to true, the object will be loaded from the file and overrides the existing in the db. If set to false, then the object will be loaded from the db.
      */
     suspend fun loadObject(
         url: String,
+        objectName: String? = null,
+        overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {},
     ) {
 
@@ -114,9 +149,13 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * Function for attaching a material file to the current object.
      * @param resourceId The id of the raw resource.
      * @param onFinish Callback for when the file has finished loading.
+     * @param materialName The name of the object, used for storing and loading it locally for optimization. If no name is given the object cannot be stored or loaded locally.
+     * @param overrideIfExists If [materialName] is given and set to true, the object will be loaded from the file and overrides the existing in the db. If set to false, then the object will be loaded from the db.
      */
     suspend fun loadMaterial(
         resourceId: Int,
+        materialName: String? = null,
+        overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {}
     ) {
         val materials = MaterialFileParser().parseStream(
@@ -133,9 +172,13 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * Function for attaching a material file from a url to the current object.
      * @param url The full path of the url that the file should be loaded from (i.e. https://localhost:8000/x.mtl).
      * @param onFinish Callback for when the file has finished loading.
+     * @param materialName The name of the object, used for storing and loading it locally for optimization. If no name is given the object cannot be stored or loaded locally.
+     * @param overrideIfExists If [materialName] is given and set to true, the object will be loaded from the file and overrides the existing in the db. If set to false, then the object will be loaded from the db.
      */
     suspend fun loadMaterial(
         url: String,
+        materialName: String? = null,
+        overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {}
     ) {
         val materials = MaterialFileParser().parseURL(

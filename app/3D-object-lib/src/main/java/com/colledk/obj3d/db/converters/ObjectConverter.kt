@@ -9,38 +9,26 @@ import com.google.gson.reflect.TypeToken
 
 class ObjectConverter {
     @TypeConverter
-    fun fromVertexLocalList(list: List<VertexLocal>): String {
-        val type = object : TypeToken<List<VertexLocal>>(){}.type
+    fun fromIntList(list: List<Int>): String {
+        val type = object : TypeToken<List<Int>>(){}.type
         return Gson().toJson(list, type)
     }
 
     @TypeConverter
-    fun toVertexLocalList(json: String): List<VertexLocal> {
-        val type = object : TypeToken<List<VertexLocal>>(){}.type
+    fun toIntList(json: String): List<Int> {
+        val type = object : TypeToken<List<Int>>(){}.type
         return Gson().fromJson(json, type)
     }
 
     @TypeConverter
-    fun fromVertexNormalLocalList(list: List<VertexNormalLocal>): String {
-        val type = object : TypeToken<List<VertexNormalLocal>>(){}.type
+    fun fromFloatArray(list: FloatArray): String {
+        val type = object : TypeToken<FloatArray>(){}.type
         return Gson().toJson(list, type)
     }
 
     @TypeConverter
-    fun toVertexNormalLocalList(json: String): List<VertexNormalLocal> {
-        val type = object : TypeToken<List<VertexNormalLocal>>(){}.type
-        return Gson().fromJson(json, type)
-    }
-
-    @TypeConverter
-    fun fromFaceLocal(list: List<FaceLocal>): String {
-        val type = object : TypeToken<List<FaceLocal>>(){}.type
-        return Gson().toJson(list, type)
-    }
-
-    @TypeConverter
-    fun toFaceLocal(json: String): List<FaceLocal> {
-        val type = object : TypeToken<List<FaceLocal>>(){}.type
+    fun toFloatArray(json: String): FloatArray {
+        val type = object : TypeToken<FloatArray>(){}.type
         return Gson().fromJson(json, type)
     }
 }
