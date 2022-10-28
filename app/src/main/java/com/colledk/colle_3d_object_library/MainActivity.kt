@@ -19,12 +19,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.DrawerValue
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalDrawer
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.rememberDrawerState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,6 +43,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import com.colledk.colle_3d_object_library.components.AppBar
+import com.colledk.colle_3d_object_library.components.SelectionDrawer
 import com.colledk.obj3d.view.ObjectSurfaceView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -62,107 +68,53 @@ class MainActivity : AppCompatActivity() {
             val scope = rememberCoroutineScope()
             val scaffoldState = rememberScaffoldState()
 
+            val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-            Scaffold(scaffoldState = scaffoldState) { padding ->
-                Box(modifier = Modifier.padding(paddingValues = padding)) {
-                    AndroidView(factory = { ctx ->
-                        glView = ObjectSurfaceView(ctx).apply {
-                            scope.launch {
-                                loadMaterial(resourceId = R.raw.cubemtl)
-                                loadObject(
-                                    resourceId = descriptions.value[currentIndex.value].resourceId,
-                                    objectName = descriptions.value[currentIndex.value].name,
-                                    overrideIfExists = false
-                                ) {
-                                    scope.launch {
-                                        scaffoldState.snackbarHostState.showSnackbar(
-                                            "Loaded object ${descriptions.value[currentIndex.value].name}"
-                                        )
-                                    }
-                                }
-                                setObjectClickCallback { viewModel.setShouldOpenDialog(it) }
-                                setCameraPosition(x = 1f, y = 1f, z = 1f)
-                            }
+            Scaffold(scaffoldState = scaffoldState, topBar = {
+                AppBar(onButtonClicked = {
+                    scope.launch {
+                        if (drawerState.isOpen){
+                            drawerState.close()
+                        } else {
+                            drawerState.open()
                         }
-                        glView!!
-                    })
-
-                    DescriptionDialog(shouldOpen = shouldOpen.value, currentDescription = descriptions.value[currentIndex.value].description) {
-                        viewModel.setShouldOpenDialog(value = false)
                     }
-
-                    ColorChooser(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .height(IntrinsicSize.Max)
-                            .padding(PaddingValues(top = 15.dp)),
-                        glView = glView
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth(1f), horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Bottom object chooser
-                        ObjectChooser(
-                            scope = scope,
-                            modifier = Modifier
-                                .fillMaxWidth(.7f)
-                                .height(IntrinsicSize.Max)
-                                .padding(PaddingValues(bottom = 15.dp)),
-                            glView = glView,
-                            loadingObjectCallback = {
+                })
+            }) { padding ->
+                ModalDrawer(drawerState = drawerState, gesturesEnabled = drawerState.isOpen, drawerContent = {
+                    SelectionDrawer(scope = scope, viewModel = viewModel, scaffoldState = scaffoldState, glView = glView)
+                }) {
+                    Box(modifier = Modifier.padding(paddingValues = padding)) {
+                        AndroidView(factory = { ctx ->
+                            glView = ObjectSurfaceView(ctx).apply {
                                 scope.launch {
-                                    scaffoldState.snackbarHostState.showSnackbar(
-                                        "Loading object $it\nPlease wait while it is loading!"
-                                    )
+                                    loadMaterial(resourceId = R.raw.cubemtl)
+                                    loadObject(
+                                        resourceId = descriptions.value[currentIndex.value].resourceId,
+                                        objectName = descriptions.value[currentIndex.value].name,
+                                        overrideIfExists = false
+                                    ) {
+                                        scope.launch {
+                                            scaffoldState.snackbarHostState.showSnackbar(
+                                                "Loaded object ${descriptions.value[currentIndex.value].name}"
+                                            )
+                                        }
+                                    }
+                                    setObjectClickCallback { viewModel.setShouldOpenDialog(it) }
+                                    setCameraPosition(x = 1f, y = 1f, z = 1f)
                                 }
-                            },
-                            onFinishLoading = {
-                                scope.launch {
-                                    scaffoldState.snackbarHostState.showSnackbar(
-                                        "Finished loading object $it"
-                                    )
-                                }
-                            },
-                            viewModel = viewModel,
-                        )
+                            }
+                            glView!!
+                        })
+
+                        DescriptionDialog(
+                            shouldOpen = shouldOpen.value,
+                            currentDescription = descriptions.value[currentIndex.value].description
+                        ) {
+                            viewModel.setShouldOpenDialog(value = false)
+                        }
                     }
                 }
-
-            }
-        }
-    }
-}
-
-@Composable
-fun ColorChooser(
-    modifier: Modifier = Modifier,
-    glView: ObjectSurfaceView? = null,
-) {
-    val colorNames = mapOf(
-        floatArrayOf(0.6f, 1.0f, 1.0f, 1.0f) to "Cyan",
-        floatArrayOf(1.0f, 0.0f, 0.0f, 1.0f) to "Red",
-        floatArrayOf(0.0f, 1.0f, 0.0f, 1.0f) to "Green",
-        floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f) to "White",
-    )
-
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-        colorNames.toList().forEach { (color, colorName) ->
-            Button(
-                onClick = { glView?.setBackgroundColor(color) },
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .border(
-                        1.dp,
-                        MaterialTheme.colors.onBackground,
-                        RoundedCornerShape(20.dp)
-                    ),
-                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Text(text = colorName)
             }
         }
     }
@@ -170,124 +122,9 @@ fun ColorChooser(
 
 @Composable
 fun DescriptionDialog(shouldOpen: Boolean, currentDescription: String, onDismiss: () -> Unit) {
-    if (shouldOpen){
-        Dialog(onDismissRequest = onDismiss ) {
+    if (shouldOpen) {
+        Dialog(onDismissRequest = onDismiss) {
             Text(text = currentDescription)
-        }
-    }
-}
-
-@Composable
-fun ObjectChooser(
-    modifier: Modifier = Modifier,
-    scope: CoroutineScope,
-    viewModel: MainViewModel,
-    glView: ObjectSurfaceView? = null,
-    loadingObjectCallback: (name: String) -> Unit = {},
-    onFinishLoading: (name: String) -> Unit = {}
-) {
-
-    var canSwitchObject by remember{
-        mutableStateOf(true)
-    }
-
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-
-        // Left arrow button
-        Button(
-            onClick = {
-                scope.launch {
-                    canSwitchObject = false
-                    viewModel.goToPreviousObject()
-                    val currentObject = viewModel.descriptions.value[viewModel.currentObjectIndex.value]
-
-                    loadingObjectCallback(currentObject.name)
-                    glView?.loadObject(
-                        resourceId = currentObject.resourceId,
-                        objectName = currentObject.name
-                    ) {
-                        onFinishLoading(currentObject.name)
-                        canSwitchObject = true
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxHeight()
-                .border(
-                    1.dp,
-                    MaterialTheme.colors.onBackground,
-                    RoundedCornerShape(20.dp)
-                ),
-            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
-            shape = RoundedCornerShape(20.dp),
-            enabled = canSwitchObject
-        ) {
-            Image(
-                imageVector = Icons.Filled.KeyboardArrowLeft,
-                contentDescription = "Left arrow"
-            )
-        }
-
-        // Change object text
-        Box(
-            Modifier
-                .fillMaxHeight()
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colors.onBackground,
-                    shape = RoundedCornerShape(20.dp)
-                )
-                .background(
-                    color = MaterialTheme.colors.background,
-                    shape = RoundedCornerShape(20.dp)
-                )
-                .padding(PaddingValues(horizontal = 15.dp))
-        ) {
-            Text(
-                text = "Change object",
-                modifier = Modifier.align(Alignment.Center),
-                textAlign = TextAlign.Center,
-            )
-        }
-
-        // Right arrow button
-        Button(
-            onClick = {
-                scope.launch {
-                    canSwitchObject = false
-                    viewModel.goToNextObject()
-
-                    val currentObject = viewModel.descriptions.value[viewModel.currentObjectIndex.value]
-
-                    loadingObjectCallback(currentObject.name)
-                    glView?.loadObject(
-                        resourceId = currentObject.resourceId,
-                        objectName = currentObject.name
-                    ) {
-                        onFinishLoading(currentObject.name)
-                        canSwitchObject = true
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxHeight()
-                .border(
-                    1.dp,
-                    MaterialTheme.colors.onBackground,
-                    RoundedCornerShape(20.dp)
-                ),
-            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
-            shape = RoundedCornerShape(20.dp),
-            enabled = canSwitchObject
-        ) {
-            Image(
-                imageVector = Icons.Filled.KeyboardArrowRight,
-                contentDescription = "Right arrow"
-            )
         }
     }
 }
