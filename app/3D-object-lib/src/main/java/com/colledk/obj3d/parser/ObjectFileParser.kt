@@ -13,21 +13,21 @@ import kotlin.math.abs
 import kotlin.math.max
 
 internal class ObjectFileParser {
-    suspend fun parseURL(url: String, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO) {
+    suspend fun parseURL(url: String): ObjectData = withContext(Dispatchers.IO) {
         // Get the data from the url
         val apiService = ApiClient.getClient()
         val body = apiService.getFromUrl(url = url).body()
 
         // Create an inputstream from the responsebody
         body?.byteStream()?.let {
-            return@withContext parseStream(inputStream = it, onFinish = onFinish)
+            return@withContext parseStream(inputStream = it)
         } ?: run {
             Timber.e("Cannot load file from url")
-            return@withContext parseLines(lines = listOf(), onFinish = onFinish)
+            return@withContext parseLines(lines = listOf())
         }
     }
 
-    suspend fun parseFile(fileId: Int, context: Context, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO){
+    suspend fun parseFile(fileId: Int, context: Context): ObjectData = withContext(Dispatchers.IO){
         // Create an input stream from the raw resource
         val inputStream = context.resources.openRawResource(fileId)
 
@@ -36,19 +36,19 @@ internal class ObjectFileParser {
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
         // Get the object data from the parsed lines
-        return@withContext parseLines(lines = lines, onFinish = onFinish)
+        return@withContext parseLines(lines = lines)
     }
 
-    suspend fun parseStream(inputStream: InputStream, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO){
+    suspend fun parseStream(inputStream: InputStream): ObjectData = withContext(Dispatchers.IO){
         // Retrieve the lines of the file
         val lines = mutableListOf<String>()
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
         // Get the object data from the parsed lines
-        return@withContext parseLines(lines = lines, onFinish = onFinish)
+        return@withContext parseLines(lines = lines)
     }
 
-    private suspend fun parseLines(lines: List<String>, onFinish: () -> Unit): ObjectData = withContext(Dispatchers.IO){
+    private suspend fun parseLines(lines: List<String>): ObjectData = withContext(Dispatchers.IO){
         var currentMaterialName = ""
 
         val faces = mutableListOf<FaceData>()
@@ -111,7 +111,7 @@ internal class ObjectFileParser {
             vertices = homogenousVertices,
             vertexNormals = normals,
             faces = faces
-        ).also { onFinish() }
+        )
     }
 
     private fun getVertexData(line: String): VertexData {
@@ -339,9 +339,9 @@ internal class ObjectFileParser {
         val FACE_DATA_REGEX = "(\\d+([/]+\\d+)*)".toRegex()
         val VERTEX_NORMAL_REGEX = "vn\\s+([-+]?\\d+(.\\d+)?(\\s*)?){3,4}".toRegex()
         val VERTEX_NORMAL_DATA_REGEX = "[-+]?\\d+(.\\d+)?".toRegex()
-        val OBJECT_REGEX = "g\\s+[\\w_ ]+".toRegex()
-        val OBJECT_DATA_REGEX = "[\\w_ ]+".toRegex()
-        val MATERIAL_REGEX = "usemtl\\s+[\\w: ]+".toRegex()
+        val OBJECT_REGEX = "g\\s+[\\w_\\s]+".toRegex()
+        val OBJECT_DATA_REGEX = "[\\w_\\s]+".toRegex()
+        val MATERIAL_REGEX = "usemtl\\s+[\\w:\\s]+".toRegex()
         val MATERIAL_DATA_REGEX = "[\\w:]+".toRegex()
     }
 }

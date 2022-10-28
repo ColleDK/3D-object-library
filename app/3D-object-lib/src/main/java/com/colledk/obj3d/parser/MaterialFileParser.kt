@@ -2,7 +2,6 @@ package com.colledk.obj3d.parser
 
 import android.content.Context
 import com.colledk.obj3d.parser.data.Material
-import com.colledk.obj3d.parser.data.ObjectData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -10,17 +9,17 @@ import java.io.InputStream
 
 internal class MaterialFileParser {
 
-    suspend fun parseURL(url: String,onFinish: () -> Unit): List<Material> = withContext(Dispatchers.IO) {
+    suspend fun parseURL(url: String): List<Material> = withContext(Dispatchers.IO) {
         // Get the data from the url
         val apiService = ApiClient.getClient()
         val body = apiService.getFromUrl(url = url).body()
 
         // Create an inputstream from the responsebody
         body?.byteStream()?.let {
-            return@withContext parseStream(inputStream = it, onFinish = onFinish)
+            return@withContext parseStream(inputStream = it)
         } ?: run {
             Timber.e("Cannot load file from url")
-            return@withContext parseLines(lines = listOf(), onFinish = onFinish)
+            return@withContext parseLines(lines = listOf())
         }
     }
 
@@ -33,19 +32,19 @@ internal class MaterialFileParser {
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
         // Get the object data from the parsed lines
-        return@withContext parseLines(lines = lines, onFinish = onFinish)
+        return@withContext parseLines(lines = lines)
     }
 
-    suspend fun parseStream(inputStream: InputStream, onFinish: () -> Unit): List<Material> = withContext(Dispatchers.IO){
+    suspend fun parseStream(inputStream: InputStream): List<Material> = withContext(Dispatchers.IO){
         // Retrieve the lines of the file
         val lines = mutableListOf<String>()
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
         // Get the object data from the parsed lines
-        return@withContext parseLines(lines = lines, onFinish = onFinish)
+        return@withContext parseLines(lines = lines)
     }
 
-    private suspend fun parseLines(lines: List<String>, onFinish: () -> Unit): List<Material> = withContext(Dispatchers.IO){
+    private suspend fun parseLines(lines: List<String>): List<Material> = withContext(Dispatchers.IO){
         val materials = mutableListOf<Material>()
         lines.forEach { line ->
             when{
@@ -88,7 +87,7 @@ internal class MaterialFileParser {
             }
         }
 
-        return@withContext materials.also { onFinish() }
+        return@withContext materials
     }
 
     private fun getNewMaterialName(line: String): String{
