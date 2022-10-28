@@ -206,7 +206,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, frustumNear, frustumFar)
     }
 
-    fun setObject(data: ObjectData) {
+    fun setObject(data: ObjectData?) {
         this.data = data
         renderUpdate = RenderUpdate(
             shouldUpdateShape = true,
