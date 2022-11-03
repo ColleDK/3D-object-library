@@ -11,7 +11,7 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 internal class Shape(
-    private val objectData: ObjectData,
+    private var objectData: ObjectData,
     private val materials: List<Material> = listOf()
 ) {
 
@@ -174,7 +174,7 @@ internal class Shape(
 
     private val normalBuffer: FloatBuffer = createFloatBuffer(vertexNormals)
 
-    private val colorBuffer: FloatBuffer = createFloatBuffer(colors)
+    private var colorBuffer: FloatBuffer = createFloatBuffer(colors)
 
     private val diffuseBuffer: FloatBuffer = createFloatBuffer(diffuses)
 
@@ -412,6 +412,11 @@ internal class Shape(
 
         // Disable the attribute arrays
         disableVertexArrays()
+    }
+
+    fun updateColorBuffer(data: ObjectData) {
+        this.objectData = data
+        colorBuffer = createFloatBuffer(colors)
     }
 
     companion object{

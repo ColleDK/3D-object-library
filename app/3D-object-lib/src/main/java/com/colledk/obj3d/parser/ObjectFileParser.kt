@@ -93,7 +93,6 @@ internal class ObjectFileParser {
                 }
                 line.matches(OBJECT_REGEX) -> {
                     val currentObjectName = getObjectData(line)
-                    Timber.d("New object name $currentObjectName")
                     currentObjectGroupName = currentObjectName
                 }
                 line.matches(MATERIAL_REGEX) -> {
@@ -104,6 +103,7 @@ internal class ObjectFileParser {
             }
         }
 
+        // Convert all the vertices into homogenous coordinate system
         val maxVertexX = vertices.maxOf { abs(it.x) }
         val maxVertexY = vertices.maxOf { abs(it.y) }
         val maxVertexZ = vertices.maxOf { abs(it.z) }
