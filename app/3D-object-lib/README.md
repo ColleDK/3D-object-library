@@ -45,5 +45,5 @@ The current functionality that has been implemented for this library that can be
 ## Version
 Current version of this repository is *1.0.0-alpha*
 
-### License
+## License
 [MIT](https://choosealicense.com/licenses/mit/)
