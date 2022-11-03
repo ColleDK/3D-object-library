@@ -17,43 +17,45 @@ class MainViewModel(): ViewModel() {
     private val _currentObjectIndex = MutableStateFlow<Int>(0)
     val currentObjectIndex: StateFlow<Int> = _currentObjectIndex.asStateFlow()
 
+    private val _objectNaming = MutableStateFlow<String?>(null)
+    val objectNaming: StateFlow<String?> = _objectNaming.asStateFlow()
+
+    private val _chosenPainterColor = MutableStateFlow<FloatArray>(floatArrayOf(1f, 1f, 1f))
+    val chosenPainterColor: StateFlow<FloatArray> = _chosenPainterColor.asStateFlow()
+
     init {
         _descriptions.value = listOf(
             ObjectDescription(
                 resourceId = R.raw.cube,
                 name = "Cube",
-                scale = 1,
                 description = "This is a very cool description of the cube."
-            ),
-            ObjectDescription(
-                resourceId = R.raw.human,
-                name = "Human",
-                scale = 5,
-                description = "This is a very cool description of the human."
             ),
             ObjectDescription(
                 resourceId = R.raw.minicooper,
                 name = "Car",
-                scale = 20,
                 description = "This is a very cool description of the car."
+            ),
+            ObjectDescription(
+                resourceId = R.raw.human,
+                name = "Human",
+                description = "This is a very cool description of the human."
             ),
             ObjectDescription(
                 resourceId = R.raw.dragon,
                 name = "Dragon",
-                scale = 5,
                 description = "This is a very cool description of the dragon."
             ),
             ObjectDescription(
                 resourceId = R.raw.chair,
                 name = "Chair",
-                scale = 5,
                 description = "This is a very cool description of the chair."
             ),
         )
     }
 
-    fun setShouldOpenDialog(value: Boolean){
-        _shouldOpenDialog.value = value
+    fun setShouldOpenDialog(shouldOpen: Boolean, name: String?){
+        _shouldOpenDialog.value = shouldOpen
+        _objectNaming.value = name
     }
 
     fun goToPreviousObject() {
@@ -62,6 +64,14 @@ class MainViewModel(): ViewModel() {
 
     fun goToNextObject() {
         _currentObjectIndex.value = (_currentObjectIndex.value + 1) % _descriptions.value.size
+    }
+
+    fun goToObject(index: Int) {
+        _currentObjectIndex.value = index.coerceIn(0 until _descriptions.value.size)
+    }
+
+    fun setPainterColor(color: FloatArray) {
+        _chosenPainterColor.value = color
     }
 
 }

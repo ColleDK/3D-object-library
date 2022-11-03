@@ -127,10 +127,27 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
                     materials = materials
                 )
             }
+            renderUpdate = RenderUpdate(
+                shouldUpdateColor = renderUpdate.shouldUpdateColor,
+                shouldUpdateShape = false,
+                shouldUpdateShapeColor = renderUpdate.shouldUpdateShapeColor
+            )
+        }
+
+        if (renderUpdate.shouldUpdateShapeColor) {
+            data?.let {
+                shape?.updateColorBuffer(it) ?: run {
+                    shape = Shape(
+                        objectData = it,
+                        materials = materials
+                    )
+                }
+            }
 
             renderUpdate = RenderUpdate(
                 shouldUpdateColor = renderUpdate.shouldUpdateColor,
-                shouldUpdateShape = false
+                shouldUpdateShape = renderUpdate.shouldUpdateShape,
+                shouldUpdateShapeColor = false
             )
         }
 
@@ -210,8 +227,30 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         this.data = data
         renderUpdate = RenderUpdate(
             shouldUpdateShape = true,
-            shouldUpdateColor = renderUpdate.shouldUpdateColor
+            shouldUpdateColor = renderUpdate.shouldUpdateColor,
+            shouldUpdateShapeColor = renderUpdate.shouldUpdateShapeColor
         )
+    }
+
+    fun setObjectColor(data: ObjectData?) {
+        this.data = data
+        renderUpdate = RenderUpdate(
+            shouldUpdateShape = renderUpdate.shouldUpdateShape,
+            shouldUpdateColor = renderUpdate.shouldUpdateColor,
+            shouldUpdateShapeColor = true
+        )
+    }
+
+    fun setObjectColor(color: FloatArray){
+        val newFaces = data?.faces?.map { it.copy(color = color) } ?: listOf()
+        val newData = data?.copy(faces = newFaces)
+        setObjectColor(newData)
+    }
+
+    fun setObjectGroupColor(color: FloatArray, name: String) {
+        val newFaces = data?.faces?.map { if (it.objectGroupName == name) it.copy(color = color) else it } ?: listOf()
+        val newData = data?.copy(faces = newFaces)
+        setObjectColor(newData)
     }
 
     fun setBackground() {
@@ -225,7 +264,8 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         this.materials = materials
         renderUpdate = RenderUpdate(
             shouldUpdateColor = renderUpdate.shouldUpdateColor,
-            shouldUpdateShape = true
+            shouldUpdateShape = true,
+            shouldUpdateShapeColor = renderUpdate.shouldUpdateShapeColor
         )
     }
 
@@ -233,15 +273,16 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         this.materials = listOf(material)
         renderUpdate = RenderUpdate(
             shouldUpdateColor = renderUpdate.shouldUpdateColor,
-            shouldUpdateShape = true
+            shouldUpdateShape = true,
+            shouldUpdateShapeColor = renderUpdate.shouldUpdateShapeColor
         )
     }
 
-    fun calculateRayPicking(mouseX: Float, mouseY: Float): Boolean {
+    fun calculateRayPicking(mouseX: Float, mouseY: Float): Pair<Boolean, String?> {
         return unProject(mouseX = mouseX, mouseY = mouseY)
     }
 
-    private fun unProject(mouseX: Float, mouseY: Float): Boolean {
+    private fun unProject(mouseX: Float, mouseY: Float): Pair<Boolean, String?> {
         val nearPos = FloatArray(4)
         val farPos = FloatArray(4)
         val viewPort = intArrayOf(0, 0, currentScreenWidth, currentScreenHeight)
@@ -293,10 +334,14 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
                 }
             }
         }
-        return false.also { Timber.e("Failed to unproject coordinates for mouse click {$mouseX, $mouseY}\nReceived unprojected data: {$unProjectedNearPos, $unProjectedFarPos}") }
+        return Pair(false, null).also { Timber.e("Failed to unproject coordinates for mouse click {$mouseX, $mouseY}\nReceived unprojected data: {$unProjectedNearPos, $unProjectedFarPos}") }
     }
 
-    private fun mollerTrumboreIntersection(origin: VertexData, rayDir: VertexData): Boolean{
+    // Based on the paper https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
+    private fun mollerTrumboreIntersection(origin: VertexData, rayDir: VertexData): Pair<Boolean, String?> {
+        // Create a list for the hit points with the distance factor t and name as values
+        val hitPoints = mutableListOf<Pair<Float, String>>()
+
         data?.faces?.forEach { face ->
             // The the current vertices
             val v1 = data?.vertices?.getOrNull(face.vertexIndeces[0])
@@ -305,21 +350,25 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
             val (p1, p2, p3) = allLet(v1, v2, v3) {
                 Timber.e("Cannot calculate ray picking intersection with null objects {$v1, $v2, $v3}")
-                return false
+                return Pair(false, null)
             }
 
+            // First define the two edges of the triangle
             val edge1 = p2 - p1
             val edge2 = p3 - p1
 
+            // Define a very small number to exclude false positives
             val epsilon = 0.000001f
 
             val p = rayDir.crossProduct(edge2)
             val det = edge1.dotProduct(p)
 
+            // Check if the ray is parallel to the triangle
             if (det <= -epsilon || det >= epsilon) {
                 val invDet = 1f / det
                 val t = origin - p1
 
+                // Calculate the barycentric coordinates (u, v) for the ray
                 val u = t.dotProduct(p) * invDet
 
                 if (u in 0f..1f) {
@@ -327,18 +376,30 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
                     val v = rayDir.dotProduct(q) * invDet
 
                     if (v >= 0f && u + v <= 1f) {
+                        // Calculate the distance factor t for the intersection
+                        // Can also find the intersection point as R(t) = rayOrigin + rayDir * t
                         val t2 = edge2.dotProduct(q) * invDet
                         if (t2 > epsilon){
-                            return true
+                            // Since multiple faces can be hit we add the current one to the list of faces
+                            hitPoints.add(Pair(t2, face.objectGroupName))
                         }
                     }
                 }
             }
         }
-        return false
+
+        return when(hitPoints.isEmpty()){
+            true -> {
+                Pair(false, null)
+            }
+            else -> {
+                // Return the face with the smalllest distance from the origin (camera position)
+                Pair(true, hitPoints.minByOrNull { it.first }!!.second)
+            }
+        }
     }
 
-    private fun checkRayPickingIntersection(q1: VertexData, q2: VertexData): Boolean{
+    private fun checkRayPickingIntersection(q1: VertexData, q2: VertexData): Pair<Boolean, String?> {
         // Iterate each triangle of the object
         data?.faces?.forEach { face ->
             // The the current vertices
@@ -348,7 +409,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
             val (p1, p2, p3) = allLet(v1, v2, v3) {
                 Timber.e("Cannot calculate ray picking intersection with null objects {$v1, $v2, $v3}")
-                return false
+                return Pair(false, null)
             }
 
             // Calculate the volume for the face triangle and the near and far positions
@@ -365,12 +426,16 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
                     val volume5 = getSignedTetrahedronVolume(a = q1, b = q2, c = p3, d = p1)
 
                     if (hasSameSign(volume3, volume4, volume5)){
-                        return true
+                        return if (face.objectGroupName.isNotEmpty()){
+                            Pair(true, face.objectGroupName)
+                        } else {
+                            Pair(true, null)
+                        }
                     }
                 }
             }
         }
-        return false
+        return Pair(false, null)
     }
 
     private fun logMatrices() {

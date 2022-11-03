@@ -50,6 +50,7 @@ internal class ObjectFileParser {
 
     private suspend fun parseLines(lines: List<String>): ObjectData = withContext(Dispatchers.IO){
         var currentMaterialName = ""
+        var currentObjectGroupName = ""
 
         val faces = mutableListOf<FaceData>()
         val vertices = mutableListOf<VertexData>()
@@ -67,7 +68,8 @@ internal class ObjectFileParser {
                 line.matches(FACE_REGEX) -> {
                     val currentFaceData = getFaceData(
                         line = line,
-                        materialName = currentMaterialName
+                        materialName = currentMaterialName,
+                        objectGroupName = currentObjectGroupName
                     )
 
                     faces.add(currentFaceData)
@@ -76,7 +78,8 @@ internal class ObjectFileParser {
                     val currentFaceData = getFaceDataTriangulated(
                         line = line,
                         vertices = vertices,
-                        materialName = currentMaterialName
+                        materialName = currentMaterialName,
+                        objectGroupName = currentObjectGroupName
                     )
 
                     faces.addAll(currentFaceData)
@@ -90,7 +93,7 @@ internal class ObjectFileParser {
                 }
                 line.matches(OBJECT_REGEX) -> {
                     val currentObjectName = getObjectData(line)
-                    Timber.d("New object name $currentObjectName")
+                    currentObjectGroupName = currentObjectName
                 }
                 line.matches(MATERIAL_REGEX) -> {
                     val lineData = MATERIAL_DATA_REGEX.findAll(line).map { it.value }.filterNot { it == "usemtl" }.toList()
@@ -100,6 +103,7 @@ internal class ObjectFileParser {
             }
         }
 
+        // Convert all the vertices into homogenous coordinate system
         val maxVertexX = vertices.maxOf { abs(it.x) }
         val maxVertexY = vertices.maxOf { abs(it.y) }
         val maxVertexZ = vertices.maxOf { abs(it.z) }
@@ -143,7 +147,7 @@ internal class ObjectFileParser {
         }
     }
 
-    private fun getFaceData(line: String, materialName: String): FaceData {
+    private fun getFaceData(line: String, materialName: String, objectGroupName: String): FaceData {
         val lineData = FACE_DATA_REGEX.findAll(line).map { it.value }.toList()
 
         // Check if we only have face vertex data
@@ -151,18 +155,20 @@ internal class ObjectFileParser {
             FaceData(
                 vertexIndeces = lineData.map { it.split("/")[0].toInt() - 1 },
                 vertexNormalIndeces = lineData.map { it.split("/")[2].toInt() - 1 },
-                materialName = materialName
+                materialName = materialName,
+                objectGroupName = objectGroupName
             )
 
         } else {
             FaceData(
                 vertexIndeces = lineData.map { it.toInt() - 1 },
-                materialName = materialName
+                materialName = materialName,
+                objectGroupName = objectGroupName
             )
         }
     }
 
-    private fun getFaceDataTriangulated(line: String, vertices: List<VertexData>, materialName: String): List<FaceData> {
+    private fun getFaceDataTriangulated(line: String, vertices: List<VertexData>, materialName: String, objectGroupName: String): List<FaceData> {
         val faces = mutableListOf<FaceData>()
 
         // First we retrieve the data from the line
@@ -251,7 +257,8 @@ internal class ObjectFileParser {
                                     it[currentIndex],
                                     it[(currentIndex + 1) % indexList.size],
                                 ),
-                                materialName = materialName
+                                materialName = materialName,
+                                objectGroupName = objectGroupName
                             )
                         )
                     } ?: run {
@@ -262,7 +269,8 @@ internal class ObjectFileParser {
                                     indexList[currentIndex],
                                     indexList[(currentIndex + 1) % indexList.size],
                                 ),
-                                materialName = materialName
+                                materialName = materialName,
+                                objectGroupName = objectGroupName
                             )
                         )
                     }
@@ -327,8 +335,12 @@ internal class ObjectFileParser {
     }
 
     private fun getObjectData(line: String): String {
-        val lineData = OBJECT_DATA_REGEX.findAll(line).map { it.value }.toList()
-        return lineData.filterNot { it == "g" }.firstOrNull() ?: ""
+        val lineData = OBJECT_REGEX.find(line)
+        lineData?.let {
+            val (objectName) = it.destructured
+            return objectName
+        }
+        return ""
     }
 
     companion object{
@@ -339,7 +351,7 @@ internal class ObjectFileParser {
         val FACE_DATA_REGEX = "(\\d+([/]+\\d+)*)".toRegex()
         val VERTEX_NORMAL_REGEX = "vn\\s+([-+]?\\d+(.\\d+)?(\\s*)?){3,4}".toRegex()
         val VERTEX_NORMAL_DATA_REGEX = "[-+]?\\d+(.\\d+)?".toRegex()
-        val OBJECT_REGEX = "g\\s+[\\w_\\s]+".toRegex()
+        val OBJECT_REGEX = "g\\s+([\\w_\\s]+)".toRegex()
         val OBJECT_DATA_REGEX = "[\\w_\\s]+".toRegex()
         val MATERIAL_REGEX = "usemtl\\s+[\\w:\\s]+".toRegex()
         val MATERIAL_DATA_REGEX = "[\\w:]+".toRegex()

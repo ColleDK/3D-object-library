@@ -24,7 +24,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
     private val renderer: ObjectRenderer
 
-    private var hitObjectCallback: (hitObject: Boolean) -> Unit = {}
+    private var hitObjectCallback: (hitObject: Boolean, groupName: String?) -> Unit = { _, _ -> }
 
     private lateinit var db: ObjectDatabase
 
@@ -40,9 +40,15 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         // We set the rendermode to dirty so we only update the view when needed
         renderMode = RENDERMODE_WHEN_DIRTY
 
+        // Create the gesture handler for the view
         createGestureDetector()
 
-        db = Room.databaseBuilder(context.applicationContext, ObjectDatabase::class.java, "3D-object db").build()
+        // Create a DB to persist read data for faster consecutive loading
+        db = Room.databaseBuilder(
+            context.applicationContext,
+            ObjectDatabase::class.java,
+            "3D-object db"
+        ).build()
     }
 
     private fun createGestureDetector() {
@@ -59,12 +65,11 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                 },
                 onClick = { clickX, clickY ->
                     // The last user input was a single press so we look for ray intersection
-                    val hit = renderer.calculateRayPicking(
+                    val (hit, name) = renderer.calculateRayPicking(
                         mouseX = clickX - left,
                         mouseY = clickY - top,
                     )
-                    hitObjectCallback(hit)
-                    Timber.d("Hit object $hit")
+                    hitObjectCallback(hit, name)
                 }
             ),
                 nearFrustumVal = renderer.frustumNear,
@@ -86,7 +91,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         onFinish: () -> Unit = {},
     ) = withContext(Dispatchers.IO) {
         // Check if the object should be stored/loaded in the DB
-        val data = when(objectName){
+        val data = when (objectName) {
             // Load in the data from the parser
             null -> {
                 ObjectFileParser().parseStream(
@@ -95,7 +100,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
             }
             else -> {
                 // If we should override the existing object we read the file
-                if (overrideIfExists){
+                if (overrideIfExists) {
                     ObjectFileParser().parseStream(
                         inputStream = context.resources.openRawResource(resourceId)
                     ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
@@ -131,7 +136,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         objectName: String? = null,
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {},
-    ) = withContext(Dispatchers.IO)  {
+    ) = withContext(Dispatchers.IO) {
 
         // Load in the data from the parser
         val data = ObjectFileParser().parseURL(
@@ -157,7 +162,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         materialName: String? = null,
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {}
-    ) = withContext(Dispatchers.IO)  {
+    ) = withContext(Dispatchers.IO) {
         val materials = MaterialFileParser().parseStream(
             inputStream = context.resources.openRawResource(resourceId),
         )
@@ -179,7 +184,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         materialName: String? = null,
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {}
-    ) = withContext(Dispatchers.IO)  {
+    ) = withContext(Dispatchers.IO) {
         val materials = MaterialFileParser().parseURL(
             url = url,
         )
@@ -244,6 +249,62 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
     }
 
     /**
+     * Function for setting the color of the object. The default color for the object is (1f, 1f, 1f) or white
+     * @param color The RGB values for the color as [FloatArray]. If no values are given the color will default to (1f, 1f, 1f).
+     * If < 3 values are given the value will be set to the highest value of the array.
+     */
+    fun setObjectColor(
+        color: FloatArray
+    ) {
+        when (color.size) {
+            0 -> {
+                renderer.setObjectColor(floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f))
+            }
+            else -> {
+                val maxValue = color.maxOf { it }
+                renderer.setObjectColor(
+                    floatArrayOf(
+                        color.getOrNull(0) ?: maxValue,
+                        color.getOrNull(1) ?: maxValue,
+                        color.getOrNull(2) ?: maxValue
+                    )
+                )
+                renderObject()
+            }
+        }
+    }
+
+    /**
+     * Function for setting the color of a group in the object. The default color for the group is (1f, 1f, 1f) or white
+     * @param color The RGB values for the color as [FloatArray]. If no values are given the color will default to (1f, 1f, 1f).
+     * If < 3 values are given the value will be set to the highest value of the array.
+     * @param groupName The group name defined by the .obj file that should change color.
+     */
+    fun setObjectGroupColor(
+        color: FloatArray,
+        groupName: String
+    ) {
+        when (color.size) {
+            0 -> {
+                renderer.setObjectColor(floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f))
+            }
+            else -> {
+                val maxValue = color.maxOf { it }
+                renderer.setObjectGroupColor(
+                    floatArrayOf(
+                        color.getOrNull(0) ?: maxValue,
+                        color.getOrNull(1) ?: maxValue,
+                        color.getOrNull(2) ?: maxValue
+                    ),
+                    name = groupName
+                )
+                renderObject()
+            }
+        }
+    }
+
+
+    /**
      * Function for setting the position of the lighting. The default position for the light is at position {0, 0, 1}.
      * @param x x coordinate of the position as [Float].
      * @param y y coordinate of the position as [Float].
@@ -289,7 +350,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * Function for setting a callback that will be called whenever a click action happens on the screen, and will return a [Boolean] for whether an object was hit or not.
      * @param callback The callback function that should be called whenever a user click happens.
      */
-    fun setObjectClickCallback(callback: (hitObject: Boolean) -> Unit) {
+    fun setObjectClickCallback(callback: (hitObject: Boolean, groupName: String?) -> Unit) {
         hitObjectCallback = callback
     }
 
@@ -300,7 +361,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * [IntersectionMode.MOLLER_TRUMBORE] - Calculates the intersection by using the Möller-Trumbore fast intersection algorithm.
      * @param mode The current mode that the intersection should be calculated with.
      */
-    fun setIntersectionCalculationMode(mode: IntersectionMode = IntersectionMode.MOLLER_TRUMBORE){
+    fun setIntersectionCalculationMode(mode: IntersectionMode = IntersectionMode.MOLLER_TRUMBORE) {
         renderer.intersectionMode = mode
     }
 
@@ -315,8 +376,14 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         requestLayout()
     }
 
-    enum class IntersectionMode{
+    enum class IntersectionMode {
         MOLLER_TRUMBORE,
         TETRAHEDRON_VOLUME
+    }
+
+    enum class PainterMode {
+        FULL_OBJECT,
+        GROUPED_OBJECT,
+        NONE
     }
 }

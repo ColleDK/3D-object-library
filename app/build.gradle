@@ -70,4 +70,7 @@ dependencies {
 //    debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
 //    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
 
+    // Color picker
+    implementation "com.github.skydoves:colorpicker-compose:1.0.0"
+
 }

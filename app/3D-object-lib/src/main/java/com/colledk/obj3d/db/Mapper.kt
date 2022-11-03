@@ -46,6 +46,7 @@ internal fun FaceData.mapToLocal(name: String): FaceLocal {
         vertexNormalIndeces = vertexNormalIndeces,
         color = color,
         materialName = materialName,
+        objectGroupName = objectGroupName,
     )
 }
 
@@ -80,6 +81,7 @@ internal fun FaceLocal.mapToDomain(): FaceData {
         vertexIndeces = vertexIndeces,
         vertexNormalIndeces = vertexNormalIndeces,
         color = color,
-        materialName = materialName
+        materialName = materialName,
+        objectGroupName = objectGroupName
     )
 }
