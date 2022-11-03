@@ -7,6 +7,15 @@
 * Default gesture handler with functionality for rotation, zoom and click actions.
 * Raypicking calculations by Möller-Trumbore fast intersection algorithm or tetrahedron volume algorithm.
 
+<!--
+<div align="center">
+    <img src="https://user-images.githubusercontent.com/55872600/199725283-17e7aa4f-1853-49bc-afa3-ea5d218addc9.png" alt="visualizing objects" width=300></img>
+-->
+</div>
+<div align="center">
+    <video src="https://user-images.githubusercontent.com/55872600/199725259-f3188aee-c10b-4da8-a28e-2da716003620.mov" width=180></video>
+</div>
+    
 ## Installation
 This library is published through Jitpack.io. For adding the repository to an existing project
 Add jitpack.io to your settings.gradle file
