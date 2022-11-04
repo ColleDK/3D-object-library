@@ -73,7 +73,7 @@ AndroidView(factory = { ctx ->
 ```kotlin
 AndroidView(factory = { ctx ->
   ObjectSurfaceView(ctx).apply {
-    loadMaterial(resourceId = R.raw.somematerial)
+    loadMaterial(resourceId = R.raw.somematerial, materialName = "something" /* For storing the materials in the database */)
   }
 })
 ```
@@ -81,7 +81,7 @@ AndroidView(factory = { ctx ->
 ```kotlin
 AndroidView(factory = { ctx ->
   ObjectSurfaceView(ctx).apply {
-    loadMaterial(url = "https://localhost:8080/somematerial.mtl")
+    loadMaterial(url = "https://localhost:8080/somematerial.mtl", materialName = "something" /* For storing the materials in the database */)
   }
 })
 ```
@@ -158,7 +158,7 @@ Current version of this repository is *1.0.0-alpha*
 ```
 MIT License
 
-Copyright (c) 2022 ColleDK
+Copyright (c) by 2022 ColleDK (William Mortensen)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

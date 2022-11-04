@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
                         AndroidView(factory = { ctx ->
                             glView = ObjectSurfaceView(ctx).apply {
                                 scope.launch {
-                                    loadMaterial(resourceId = R.raw.cubemtl)
+                                    loadMaterial(resourceId = R.raw.cubemtl, materialName = "cube")
                                     loadObject(
                                         resourceId = descriptions.value[currentIndex.value].resourceId,
                                         objectName = descriptions.value[currentIndex.value].name,

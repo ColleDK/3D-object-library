@@ -1,11 +1,13 @@
 package com.colledk.obj3d.db
 
 import com.colledk.obj3d.db.model.FaceLocal
+import com.colledk.obj3d.db.model.MaterialLocal
 import com.colledk.obj3d.db.model.ObjectLocal
 import com.colledk.obj3d.db.model.ObjectNameLocal
 import com.colledk.obj3d.db.model.VertexLocal
 import com.colledk.obj3d.db.model.VertexNormalLocal
 import com.colledk.obj3d.parser.data.FaceData
+import com.colledk.obj3d.parser.data.Material
 import com.colledk.obj3d.parser.data.ObjectData
 import com.colledk.obj3d.parser.data.VertexData
 import com.colledk.obj3d.parser.data.VertexNormalData
@@ -50,6 +52,21 @@ internal fun FaceData.mapToLocal(name: String): FaceLocal {
     )
 }
 
+internal fun Material.mapToLocal(fileName: String): MaterialLocal {
+    return MaterialLocal(
+        fileName = fileName,
+        name = name,
+        shininess = shininess,
+        ambient = ambient,
+        diffuse = diffuse,
+        specular = specular,
+        emissive = emissive,
+        opticalDensity = opticalDensity,
+        opacity = opacity,
+        illum = illum
+    )
+}
+
 internal fun ObjectLocal.mapToDomain(): ObjectData {
     return ObjectData(
         vertices = vertices.map { it.mapToDomain() },
@@ -83,5 +100,19 @@ internal fun FaceLocal.mapToDomain(): FaceData {
         color = color,
         materialName = materialName,
         objectGroupName = objectGroupName
+    )
+}
+
+internal fun MaterialLocal.mapToDomain(): Material {
+    return Material(
+        name = name,
+        shininess = shininess,
+        ambient = ambient,
+        diffuse = diffuse,
+        specular = specular,
+        emissive = emissive,
+        opticalDensity = opticalDensity,
+        opacity = opacity,
+        illum = illum
     )
 }

@@ -64,8 +64,8 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:5.0.1'
 
     // Object library
-    implementation 'com.github.ColleDK:3D-object-library:1.0.0-alpha'
-//    implementation(project(path: '3D-object-lib'))
+//    implementation 'com.github.ColleDK:3D-object-library:1.0.0-alpha'
+    implementation(project(path: '3D-object-lib'))
 //    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
 //    debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
 //    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
