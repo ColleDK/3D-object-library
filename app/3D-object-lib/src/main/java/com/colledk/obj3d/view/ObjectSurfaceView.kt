@@ -137,11 +137,33 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {},
     ) = withContext(Dispatchers.IO) {
-
-        // Load in the data from the parser
-        val data = ObjectFileParser().parseURL(
-            url = url,
-        )
+        // Check if the object should be stored/loaded in the DB
+        val data = when (objectName) {
+            // Load in the data from the parser
+            null -> {
+                ObjectFileParser().parseURL(
+                    url = url
+                )
+            }
+            else -> {
+                // If we should override the existing object we read the file
+                if (overrideIfExists) {
+                    ObjectFileParser().parseURL(
+                        url = url
+                    ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
+                } else { // Else we load in the object from the DB
+                    db.objectDao().getSpecificObject(name = objectName)?.mapToDomain()?.also {
+                        Timber.d("Finished loading object from database")
+                    } ?: run {
+                        Timber.e("An error occurred when reading the object from the database, or the object does not exist in the database yet. Going into fallback by reading file!")
+                        // If any error happens and we receive a null object, we just load the file
+                        ObjectFileParser().parseURL(
+                            url = url
+                        ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
+                    }
+                }
+            }
+        }
 
         // Set the data on the renderer
         renderer.setObject(data = data)
@@ -163,9 +185,33 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {}
     ) = withContext(Dispatchers.IO) {
-        val materials = MaterialFileParser().parseStream(
-            inputStream = context.resources.openRawResource(resourceId),
-        )
+        // Check if the material should be stored/loaded in the DB
+        val materials = when (materialName) {
+            // Load in the data from the parser
+            null -> {
+                MaterialFileParser().parseStream(
+                    inputStream = context.resources.openRawResource(resourceId),
+                )
+            }
+            else -> {
+                // If we should override the existing material we read the file
+                if (overrideIfExists) {
+                    MaterialFileParser().parseStream(
+                        inputStream = context.resources.openRawResource(resourceId),
+                    ).also { db.materialDao().insertMaterials(it.map { mat -> mat.mapToLocal((materialName)) }) }
+                } else { // Else we load in the material from the DB
+                    db.materialDao().getSpecificMaterial(name = materialName)?.materials?.map { it.mapToDomain() }?.also {
+                        Timber.d("Finished loading material from database")
+                    } ?: run {
+                        Timber.e("An error occurred when reading the material from the database, or the material does not exist in the database yet. Going into fallback by reading file!")
+                        // If any error happens and we receive a null object, we just load the file
+                        MaterialFileParser().parseStream(
+                            inputStream = context.resources.openRawResource(resourceId),
+                        ).also { db.materialDao().insertMaterials(it.map { mat -> mat.mapToLocal(materialName) }) }
+                    }
+                }
+            }
+        }
 
         renderer.attachMaterials(materials = materials)
 
@@ -185,9 +231,33 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
         overrideIfExists: Boolean = false,
         onFinish: () -> Unit = {}
     ) = withContext(Dispatchers.IO) {
-        val materials = MaterialFileParser().parseURL(
-            url = url,
-        )
+        // Check if the material should be stored/loaded in the DB
+        val materials = when (materialName) {
+            // Load in the data from the parser
+            null -> {
+                MaterialFileParser().parseURL(
+                    url = url
+                )
+            }
+            else -> {
+                // If we should override the existing material we read the file
+                if (overrideIfExists) {
+                    MaterialFileParser().parseURL(
+                        url = url
+                    ).also { db.materialDao().insertMaterials(it.map { mat -> mat.mapToLocal((materialName)) }) }
+                } else { // Else we load in the material from the DB
+                    db.materialDao().getSpecificMaterial(name = materialName)?.materials?.map { it.mapToDomain() }?.also {
+                        Timber.d("Finished loading material from database")
+                    } ?: run {
+                        Timber.e("An error occurred when reading the material from the database, or the material  does not exist in the database yet. Going into fallback by reading file!")
+                        // If any error happens and we receive a null object, we just load the file
+                        MaterialFileParser().parseURL(
+                            url = url
+                        ).also { db.materialDao().insertMaterials(it.map { mat -> mat.mapToLocal(materialName) }) }
+                    }
+                }
+            }
+        }
 
         renderer.attachMaterials(materials = materials)
 
