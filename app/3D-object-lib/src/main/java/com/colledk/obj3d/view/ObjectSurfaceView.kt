@@ -258,7 +258,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
     ) {
         when (color.size) {
             0 -> {
-                renderer.setObjectColor(floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f))
+                renderer.setObjectColor(floatArrayOf(1.0f, 1.0f, 1.0f))
             }
             else -> {
                 val maxValue = color.maxOf { it }
@@ -286,7 +286,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
     ) {
         when (color.size) {
             0 -> {
-                renderer.setObjectColor(floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f))
+                renderer.setObjectColor(floatArrayOf(1.0f, 1.0f, 1.0f))
             }
             else -> {
                 val maxValue = color.maxOf { it }
