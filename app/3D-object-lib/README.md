@@ -16,6 +16,9 @@
     <video src="https://user-images.githubusercontent.com/55872600/199725259-f3188aee-c10b-4da8-a28e-2da716003620.mov" width=180></video>
 </div>
     
+## Version
+[![](https://jitpack.io/v/ColleDK/3D-object-library.svg)](https://jitpack.io/#ColleDK/3D-object-library)
+    
 ## Installation
 This library is published through Jitpack.io. For adding the repository to an existing project
 Add jitpack.io to your settings.gradle file
@@ -150,9 +153,6 @@ AndroidView(factory = { ctx ->
   }
 })
 ```
-
-## Version
-Current version of this repository is *1.0.0-alpha*
 
 ## License
 ```
