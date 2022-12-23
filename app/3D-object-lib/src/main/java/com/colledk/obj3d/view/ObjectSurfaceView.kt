@@ -155,7 +155,8 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                     db.objectDao().getSpecificObject(name = objectName)?.mapToDomain()?.also {
                         Timber.d("Finished loading object from database")
                     } ?: run {
-                        Timber.e("An error occurred when reading the object from the database, or the object does not exist in the database yet. Going into fallback by reading file!")
+                        Timber.e("An error occurred when reading the object from the database, " +
+                                "or the object does not exist in the database yet. Going into fallback by reading file!")
                         // If any error happens and we receive a null object, we just load the file
                         ObjectFileParser().parseURL(
                             url = url

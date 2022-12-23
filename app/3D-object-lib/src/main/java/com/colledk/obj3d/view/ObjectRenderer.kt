@@ -170,6 +170,9 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.setRotateM(rotationX, 0, xAngle, 0f, 1f, 0f)
         Matrix.setRotateM(rotationY, 0, yAngle, 1f, 0f, 0f)
 
+        val rotation = FloatArray(16)
+        Matrix.multiplyMM(rotation, 0, rotationX, 0, rotationY, 0)
+
         // Find the center point
         val maxX = data?.vertices?.maxOf { it.x } ?: Float.MAX_VALUE
         val minX = data?.vertices?.minOf { it.x } ?: Float.MIN_VALUE
@@ -182,12 +185,10 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         val centerZ = (abs(maxZ) - abs(minZ)) / 2
 
         Matrix.setIdentityM(modelMatrix, 0)
-        // Move the rotation point to the center
-        Matrix.translateM(modelMatrix, 0, centerX, centerY, centerZ)
         // Rotate the object
-        Matrix.multiplyMM(modelMatrix, 0, rotationX, 0, rotationY, 0)
+        Matrix.multiplyMM(modelMatrix, 0, modelMatrix, 0, rotation, 0)
 
-        // Move the rotation point back to the start point
+        // Move the rotation point to the center
         Matrix.translateM(modelMatrix, 0, -centerX, -centerY, -centerZ)
 
         // Get the current mvp matrix
@@ -195,7 +196,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
         Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, modelMatrix, 0)
 
         val inverseModelView = FloatArray(16)
-        Matrix.invertM(inverseModelView, 0, mvMatrix, 0)
+        Matrix.invertM(inverseModelView, 0, mvpMatrix, 0)
 
         val normalMatrix = FloatArray(16)
         Matrix.transposeM(normalMatrix, 0, inverseModelView, 0)
@@ -206,7 +207,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             viewMatrix = viewMatrix,
             projectionMatrix = projectionMatrix,
             normalMatrix = normalMatrix,
-            lightPosition = cameraPosition.normalize().toFloatArray(),
+            lightPosition = floatArrayOf(0f, 0f, -1f),
             cameraPosition = cameraPosition.toFloatArray()
         )
     }
