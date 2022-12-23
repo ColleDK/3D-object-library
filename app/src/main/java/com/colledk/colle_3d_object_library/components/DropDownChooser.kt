@@ -32,7 +32,6 @@ fun OtherObjectChooser(items: List<ObjectDescription>, onClick: (index: Int) -> 
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
             .wrapContentSize()
     ) {
         Text(text = "Select object: ${items[selectedIndex].name}", modifier = Modifier

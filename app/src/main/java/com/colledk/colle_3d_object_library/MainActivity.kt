@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.DrawerValue
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalDrawer
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -76,7 +77,7 @@ class MainActivity : AppCompatActivity() {
                         AndroidView(factory = { ctx ->
                             glView = ObjectSurfaceView(ctx).apply {
                                 scope.launch {
-                                    loadMaterial(resourceId = R.raw.cubemtl, materialName = "cube")
+                                    loadMaterial(resourceId = R.raw.cubemtl)
                                     loadObject(
                                         resourceId = descriptions.value[currentIndex.value].resourceId,
                                         objectName = descriptions.value[currentIndex.value].name,
@@ -90,6 +91,7 @@ class MainActivity : AppCompatActivity() {
                                     }
                                     setObjectClickCallback { hasHit, name -> scope.launch {
                                         if (hasHit){
+//                                            viewModel.setShouldOpenDialog(shouldOpen = hasHit, name = name)
                                             glView?.setObjectGroupColor(color = currentPainterColor.value, groupName = name ?: "")
                                         }
                                     }}
@@ -125,7 +127,7 @@ fun DescriptionDialog(shouldOpen: Boolean, hitObjectName: String?, currentDescri
                     "Hit object group $hitObjectName with description $currentDescription"
                 }
             }
-            Text(text = currentText)
+            Text(text = currentText, modifier = Modifier.background(MaterialTheme.colors.background))
         }
     }
 }

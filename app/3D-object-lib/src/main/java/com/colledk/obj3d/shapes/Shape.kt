@@ -236,9 +236,9 @@ internal class Shape(
                     // Set the color
                 "   vColor = aColor;" +
                     // Calculate the vertex normal based on the world position
-                "   vec4 worldPosition = uNormalMatrix * vec4(aPosition, 1.0);" +
-                "   vSurfaceToView = uCameraPosition - worldPosition.xyz;" +
-                "   vNormal = (uNormalMatrix * vec4(aNormal, 0.0)).xyz;" +
+                "   vec3 worldPosition = mat3(uNormalMatrix) * aPosition;" +
+                "   vSurfaceToView = uCameraPosition - worldPosition;" +
+                "   vNormal = mat3(uNormalMatrix) * aNormal;" +
                     // Set the position of the vertex based on the transformations
                 "   gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);" +
                 "}"

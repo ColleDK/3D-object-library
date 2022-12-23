@@ -136,17 +136,17 @@ internal class MaterialFileParser {
     }
 
     companion object {
-        val MATERIAL_NAME_REGEX = "newmtl\\s+[\\w:\\s]+".toRegex()
-        val SHININESS_REGEX = "Ns\\s+\\d+.\\d+".toRegex()
-        val AMBIENT_REGEX = "Ka(\\s+\\d+.\\d+){3}".toRegex()
-        val DIFFUSE_REGEX = "Kd(\\s+\\d+.\\d+){3}".toRegex()
-        val SPECULAR_REGEX = "Ks(\\s+\\d+.\\d+){3}".toRegex()
-        val EMISSIVE_REGEX = "Ke(\\s+\\d+.\\d+){3}".toRegex()
-        val OPTICAL_DENSITY_REGEX = "Ni\\s+\\d+.\\d+".toRegex()
-        val DISSOLVE_REGEX = "d\\s+\\d+.\\d+".toRegex()
-        val ILLUM_REGEX = "illum\\s+\\d+".toRegex()
         val FLOAT_DATA_REGEX = "\\d+.\\d+".toRegex()
         val STRING_DATA_REGEX = "[\\w:]+".toRegex()
         val INT_DATA_REGEX = "\\d+".toRegex()
+        val MATERIAL_NAME_REGEX = "newmtl\\s+[\\w:\\s]+".toRegex()
+        val SHININESS_REGEX = "Ns\\s+$FLOAT_DATA_REGEX".toRegex()
+        val AMBIENT_REGEX = "Ka(\\s+$FLOAT_DATA_REGEX){3}".toRegex()
+        val DIFFUSE_REGEX = "Kd(\\s+$FLOAT_DATA_REGEX){3}".toRegex()
+        val SPECULAR_REGEX = "Ks(\\s+$FLOAT_DATA_REGEX){3}".toRegex()
+        val EMISSIVE_REGEX = "Ke(\\s+$FLOAT_DATA_REGEX){3}".toRegex()
+        val OPTICAL_DENSITY_REGEX = "Ni\\s+$FLOAT_DATA_REGEX".toRegex()
+        val DISSOLVE_REGEX = "d\\s+$FLOAT_DATA_REGEX".toRegex()
+        val ILLUM_REGEX = "illum\\s+$INT_DATA_REGEX".toRegex()
     }
 }

@@ -17,8 +17,6 @@ class ParserUnitTest {
         }
 
         assert(data.vertices == MockedParserData.parsedData.vertices)
-        //assert(data.vertices.size == 8)
-        //assert(data.vertices.containsAll(MockedParserData.parsedData.vertices) && MockedParserData.parsedData.vertices.containsAll(data.vertices))
     }
 
     @Test
@@ -30,7 +28,5 @@ class ParserUnitTest {
         }
 
         assert(data.faces == MockedParserData.parsedData.faces)
-        //assert(data.faces.size == 12)
-        //assert(data.faces.containsAll(MockedParserData.parsedData.faces) && MockedParserData.parsedData.faces.containsAll(data.faces))
     }
 }
