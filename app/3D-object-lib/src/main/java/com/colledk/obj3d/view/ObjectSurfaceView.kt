@@ -9,8 +9,8 @@ import androidx.room.Room
 import com.colledk.obj3d.db.ObjectDatabase
 import com.colledk.obj3d.db.mapToDomain
 import com.colledk.obj3d.db.mapToLocal
-import com.colledk.obj3d.gestures.GestureDetector
-import com.colledk.obj3d.gestures.IGestureDetector
+import com.colledk.obj3d.view.gestures.GestureDetector
+import com.colledk.obj3d.view.gestures.IGestureDetector
 import com.colledk.obj3d.parser.MaterialFileParser
 import com.colledk.obj3d.parser.ObjectFileParser
 import com.colledk.obj3d.parser.model.VertexData

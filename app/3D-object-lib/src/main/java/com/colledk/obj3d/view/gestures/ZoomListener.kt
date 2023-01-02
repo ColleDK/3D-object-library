@@ -1,4 +1,4 @@
-package com.colledk.obj3d.gestures
+package com.colledk.obj3d.view.gestures
 
 import android.view.ScaleGestureDetector
 
