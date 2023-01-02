@@ -13,7 +13,7 @@ import com.colledk.obj3d.gestures.GestureDetector
 import com.colledk.obj3d.gestures.IGestureDetector
 import com.colledk.obj3d.parser.MaterialFileParser
 import com.colledk.obj3d.parser.ObjectFileParser
-import com.colledk.obj3d.parser.data.VertexData
+import com.colledk.obj3d.parser.model.VertexData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -83,11 +83,13 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * @param onFinish Callback for when the file has finished loading.
      * @param objectName The name of the object, used for storing and loading it locally for optimization. If no name is given the object cannot be stored or loaded locally.
      * @param overrideIfExists If [objectName] is given and set to true, the object will be loaded from the file and overrides the existing in the db. If set to false, then the object will be loaded from the db.
+     * @param warnOnThreshold If set to true and the line count of the file reaches above 175,000 lines, the file will be read even though it might cause a crash. If set to false the file will be skipped.
      */
     suspend fun loadObject(
         resourceId: Int,
         objectName: String? = null,
         overrideIfExists: Boolean = false,
+        warnOnThreshold: Boolean = true,
         onFinish: () -> Unit = {},
     ) = withContext(Dispatchers.IO) {
         // Check if the object should be stored/loaded in the DB
@@ -95,14 +97,16 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
             // Load in the data from the parser
             null -> {
                 ObjectFileParser().parseStream(
-                    inputStream = context.resources.openRawResource(resourceId)
+                    inputStream = context.resources.openRawResource(resourceId),
+                    warnOnThreshold = warnOnThreshold
                 )
             }
             else -> {
                 // If we should override the existing object we read the file
                 if (overrideIfExists) {
                     ObjectFileParser().parseStream(
-                        inputStream = context.resources.openRawResource(resourceId)
+                        inputStream = context.resources.openRawResource(resourceId),
+                        warnOnThreshold = warnOnThreshold
                     ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
                 } else { // Else we load in the object from the DB
                     db.objectDao().getSpecificObject(name = objectName)?.mapToDomain()?.also {
@@ -111,7 +115,8 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                         Timber.e("An error occurred when reading the object from the database, or the object does not exist in the database yet. Going into fallback by reading file!")
                         // If any error happens and we receive a null object, we just load the file
                         ObjectFileParser().parseStream(
-                            inputStream = context.resources.openRawResource(resourceId)
+                            inputStream = context.resources.openRawResource(resourceId),
+                            warnOnThreshold = warnOnThreshold
                         ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
                     }
                 }
@@ -130,11 +135,13 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * @param onFinish Callback for when the file has finished loading.
      * @param objectName The name of the object, used for storing and loading it locally for optimization. If no name is given the object cannot be stored or loaded locally.
      * @param overrideIfExists If [objectName] is given and set to true, the object will be loaded from the file and overrides the existing in the db. If set to false, then the object will be loaded from the db.
+     * @param warnOnThreshold If set to true and the line count of the file reaches above 175,000 lines, the file will be read even though it might cause a crash. If set to false the file will be skipped.
      */
     suspend fun loadObject(
         url: String,
         objectName: String? = null,
         overrideIfExists: Boolean = false,
+        warnOnThreshold: Boolean = true,
         onFinish: () -> Unit = {},
     ) = withContext(Dispatchers.IO) {
         // Check if the object should be stored/loaded in the DB
@@ -142,14 +149,16 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
             // Load in the data from the parser
             null -> {
                 ObjectFileParser().parseURL(
-                    url = url
+                    url = url,
+                    warnOnThreshold = warnOnThreshold
                 )
             }
             else -> {
                 // If we should override the existing object we read the file
                 if (overrideIfExists) {
                     ObjectFileParser().parseURL(
-                        url = url
+                        url = url,
+                        warnOnThreshold = warnOnThreshold
                     ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
                 } else { // Else we load in the object from the DB
                     db.objectDao().getSpecificObject(name = objectName)?.mapToDomain()?.also {
@@ -159,7 +168,8 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                                 "or the object does not exist in the database yet. Going into fallback by reading file!")
                         // If any error happens and we receive a null object, we just load the file
                         ObjectFileParser().parseURL(
-                            url = url
+                            url = url,
+                            warnOnThreshold = warnOnThreshold
                         ).also { db.objectDao().insertObject(it.mapToLocal(objectName)) }
                     }
                 }
@@ -179,11 +189,13 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * @param onFinish Callback for when the file has finished loading.
      * @param materialName The name of the object, used for storing and loading it locally for optimization. If no name is given the object cannot be stored or loaded locally.
      * @param overrideIfExists If [materialName] is given and set to true, the object will be loaded from the file and overrides the existing in the db. If set to false, then the object will be loaded from the db.
+     * @param warnOnThreshold If set to true and the line count of the file reaches above 175,000 lines, the file will be read even though it might cause a crash. If set to false the file will be skipped.
      */
     suspend fun loadMaterial(
         resourceId: Int,
         materialName: String? = null,
         overrideIfExists: Boolean = false,
+        warnOnThreshold: Boolean = true,
         onFinish: () -> Unit = {}
     ) = withContext(Dispatchers.IO) {
         // Check if the material should be stored/loaded in the DB
@@ -192,6 +204,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
             null -> {
                 MaterialFileParser().parseStream(
                     inputStream = context.resources.openRawResource(resourceId),
+                    warnOnThreshold = warnOnThreshold
                 )
             }
             else -> {
@@ -199,6 +212,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                 if (overrideIfExists) {
                     MaterialFileParser().parseStream(
                         inputStream = context.resources.openRawResource(resourceId),
+                        warnOnThreshold = warnOnThreshold
                     ).also { db.materialDao().insertMaterials(it.map { mat -> mat.mapToLocal((materialName)) }) }
                 } else { // Else we load in the material from the DB
                     db.materialDao().getSpecificMaterial(name = materialName)?.materials?.map { it.mapToDomain() }?.also {
@@ -208,6 +222,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                         // If any error happens and we receive a null object, we just load the file
                         MaterialFileParser().parseStream(
                             inputStream = context.resources.openRawResource(resourceId),
+                            warnOnThreshold = warnOnThreshold
                         ).also { db.materialDao().insertMaterials(it.map { mat -> mat.mapToLocal(materialName) }) }
                     }
                 }
@@ -225,11 +240,13 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
      * @param onFinish Callback for when the file has finished loading.
      * @param materialName The name of the object, used for storing and loading it locally for optimization. If no name is given the object cannot be stored or loaded locally.
      * @param overrideIfExists If [materialName] is given and set to true, the object will be loaded from the file and overrides the existing in the db. If set to false, then the object will be loaded from the db.
+     * @param warnOnThreshold If set to true and the line count of the file reaches above 175,000 lines, the file will be read even though it might cause a crash. If set to false the file will be skipped.
      */
     suspend fun loadMaterial(
         url: String,
         materialName: String? = null,
         overrideIfExists: Boolean = false,
+        warnOnThreshold: Boolean = true,
         onFinish: () -> Unit = {}
     ) = withContext(Dispatchers.IO) {
         // Check if the material should be stored/loaded in the DB
@@ -237,14 +254,16 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
             // Load in the data from the parser
             null -> {
                 MaterialFileParser().parseURL(
-                    url = url
+                    url = url,
+                    warnOnThreshold = warnOnThreshold
                 )
             }
             else -> {
                 // If we should override the existing material we read the file
                 if (overrideIfExists) {
                     MaterialFileParser().parseURL(
-                        url = url
+                        url = url,
+                        warnOnThreshold = warnOnThreshold
                     ).also { db.materialDao().insertMaterials(it.map { mat -> mat.mapToLocal((materialName)) }) }
                 } else { // Else we load in the material from the DB
                     db.materialDao().getSpecificMaterial(name = materialName)?.materials?.map { it.mapToDomain() }?.also {
@@ -253,7 +272,8 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                         Timber.e("An error occurred when reading the material from the database, or the material  does not exist in the database yet. Going into fallback by reading file!")
                         // If any error happens and we receive a null object, we just load the file
                         MaterialFileParser().parseURL(
-                            url = url
+                            url = url,
+                            warnOnThreshold = warnOnThreshold
                         ).also { db.materialDao().insertMaterials(it.map { mat -> mat.mapToLocal(materialName) }) }
                     }
                 }
@@ -288,6 +308,23 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
                 1.0f,
             )
         }
+        renderer.setBackground()
+        renderObject()
+    }
+
+    /**
+     * Function for setting the view's background color.
+     * @param color The color of the background as [androidx.compose.ui.graphics.Color].
+     */
+    fun setBackgroundColor(
+        color: androidx.compose.ui.graphics.Color
+    ) {
+        renderer.backgroundColor = floatArrayOf(
+            color.red,
+            color.green,
+            color.blue,
+            color.alpha
+        )
         renderer.setBackground()
         renderObject()
     }

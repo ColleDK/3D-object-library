@@ -1,9 +1,6 @@
 package com.colledk.obj3d.math
 
-import com.colledk.obj3d.parser.data.VertexData
-import timber.log.Timber
-import kotlin.math.pow
-import kotlin.math.sqrt
+import com.colledk.obj3d.parser.model.VertexData
 
 object MathUtil {
     internal fun FloatArray.toVertexData(): VertexData {

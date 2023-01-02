@@ -1,6 +1,6 @@
 package com.colledk.obj3d.math
 
-import com.colledk.obj3d.parser.data.VertexData
+import com.colledk.obj3d.parser.model.VertexData
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4

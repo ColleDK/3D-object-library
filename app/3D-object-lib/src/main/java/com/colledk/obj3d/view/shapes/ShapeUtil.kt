@@ -1,4 +1,4 @@
-package com.colledk.obj3d.shapes
+package com.colledk.obj3d.view.shapes
 
 import android.opengl.GLES20
 import timber.log.Timber
