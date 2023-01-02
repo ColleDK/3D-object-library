@@ -1,7 +1,7 @@
 package com.colledk.obj3d.parser
 
 import android.content.Context
-import com.colledk.obj3d.parser.data.Material
+import com.colledk.obj3d.parser.model.Material
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -9,37 +9,40 @@ import java.io.InputStream
 
 internal class MaterialFileParser {
 
-    suspend fun parseURL(url: String): List<Material> = withContext(Dispatchers.IO) {
+    suspend fun parseURL(url: String, warnOnThreshold: Boolean): List<Material> = withContext(Dispatchers.IO) {
         // Get the data from the url
         val apiService = ApiClient.getClient()
         val body = apiService.getFromUrl(url = url).body()
 
         // Create an inputstream from the responsebody
         body?.byteStream()?.let {
-            return@withContext parseStream(inputStream = it)
+            return@withContext parseStream(inputStream = it, warnOnThreshold = warnOnThreshold)
         } ?: run {
             Timber.e("Cannot load file from url")
             return@withContext parseLines(lines = listOf())
         }
     }
 
-    suspend fun parseFile(fileId: Int, context: Context, onFinish: () -> Unit): List<Material> = withContext(Dispatchers.IO){
+    suspend fun parseFile(fileId: Int, context: Context, warnOnThreshold: Boolean): List<Material> = withContext(Dispatchers.IO){
         // Create an input stream from the raw resource
         val inputStream = context.resources.openRawResource(fileId)
 
-        // Retrieve the lines of the file
-        val lines = mutableListOf<String>()
-        inputStream.bufferedReader().forEachLine { lines.add(it) }
-
         // Get the object data from the parsed lines
-        return@withContext parseLines(lines = lines)
+        return@withContext parseStream(inputStream = inputStream, warnOnThreshold = warnOnThreshold)
     }
 
-    suspend fun parseStream(inputStream: InputStream): List<Material> = withContext(Dispatchers.IO){
+    suspend fun parseStream(inputStream: InputStream, warnOnThreshold: Boolean): List<Material> = withContext(Dispatchers.IO){
         // Retrieve the lines of the file
         val lines = mutableListOf<String>()
         inputStream.bufferedReader().forEachLine { lines.add(it) }
 
+        if(lines.size > LINE_THRESHOLD){
+            if (warnOnThreshold){
+                Timber.w("WARNING: Reading a file with a line count of ${lines.size}. The required data for displaying this object might not be able to allocate, and could lead to crashes!")
+            } else {
+                return@withContext parseLines(listOf())
+            }
+        }
         // Get the object data from the parsed lines
         return@withContext parseLines(lines = lines)
     }
@@ -148,5 +151,6 @@ internal class MaterialFileParser {
         val OPTICAL_DENSITY_REGEX = "Ni\\s+$FLOAT_DATA_REGEX".toRegex()
         val DISSOLVE_REGEX = "d\\s+$FLOAT_DATA_REGEX".toRegex()
         val ILLUM_REGEX = "illum\\s+$INT_DATA_REGEX".toRegex()
+        const val LINE_THRESHOLD = 175000
     }
 }

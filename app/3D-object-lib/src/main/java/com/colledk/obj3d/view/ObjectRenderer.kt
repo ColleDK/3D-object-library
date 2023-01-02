@@ -8,11 +8,11 @@ import com.colledk.obj3d.allLet
 import com.colledk.obj3d.math.MathUtil.getSignedTetrahedronVolume
 import com.colledk.obj3d.math.MathUtil.hasSameSign
 import com.colledk.obj3d.math.MathUtil.toVertexData
-import com.colledk.obj3d.parser.data.Material
-import com.colledk.obj3d.parser.data.ObjectData
-import com.colledk.obj3d.parser.data.VertexData
-import com.colledk.obj3d.shapes.Shape
-import com.colledk.obj3d.shapes.ShapeUtil
+import com.colledk.obj3d.parser.model.Material
+import com.colledk.obj3d.parser.model.ObjectData
+import com.colledk.obj3d.parser.model.VertexData
+import com.colledk.obj3d.view.shapes.Shape
+import com.colledk.obj3d.view.shapes.ShapeUtil
 import timber.log.Timber
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

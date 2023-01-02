@@ -6,11 +6,11 @@ import com.colledk.obj3d.db.model.ObjectLocal
 import com.colledk.obj3d.db.model.ObjectNameLocal
 import com.colledk.obj3d.db.model.VertexLocal
 import com.colledk.obj3d.db.model.VertexNormalLocal
-import com.colledk.obj3d.parser.data.FaceData
-import com.colledk.obj3d.parser.data.Material
-import com.colledk.obj3d.parser.data.ObjectData
-import com.colledk.obj3d.parser.data.VertexData
-import com.colledk.obj3d.parser.data.VertexNormalData
+import com.colledk.obj3d.parser.model.FaceData
+import com.colledk.obj3d.parser.model.Material
+import com.colledk.obj3d.parser.model.ObjectData
+import com.colledk.obj3d.parser.model.VertexData
+import com.colledk.obj3d.parser.model.VertexNormalData
 
 internal fun ObjectData.mapToLocal(name: String): ObjectLocal {
     return ObjectLocal(

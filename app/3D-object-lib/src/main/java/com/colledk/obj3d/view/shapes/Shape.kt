@@ -1,12 +1,9 @@
-package com.colledk.obj3d.shapes
+package com.colledk.obj3d.view.shapes
 
 import android.opengl.GLES20
-import com.colledk.obj3d.parser.data.Material
-import com.colledk.obj3d.parser.data.ObjectData
+import com.colledk.obj3d.parser.model.Material
+import com.colledk.obj3d.parser.model.ObjectData
 import com.colledk.obj3d.view.loadShader
-import timber.log.Timber
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.nio.IntBuffer
 

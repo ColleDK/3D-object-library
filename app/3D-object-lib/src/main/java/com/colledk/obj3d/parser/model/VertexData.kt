@@ -1,4 +1,4 @@
-package com.colledk.obj3d.parser.data
+package com.colledk.obj3d.parser.model
 
 import kotlin.math.acos
 import kotlin.math.pow

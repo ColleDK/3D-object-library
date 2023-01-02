@@ -1,9 +1,9 @@
 package com.colledk.obj3d.parser
 
-import com.colledk.obj3d.parser.data.FaceData
-import com.colledk.obj3d.parser.data.ObjectData
-import com.colledk.obj3d.parser.data.VertexData
-import com.colledk.obj3d.parser.data.VertexNormalData
+import com.colledk.obj3d.parser.model.FaceData
+import com.colledk.obj3d.parser.model.ObjectData
+import com.colledk.obj3d.parser.model.VertexData
+import com.colledk.obj3d.parser.model.VertexNormalData
 
 internal object MockedParserData {
 

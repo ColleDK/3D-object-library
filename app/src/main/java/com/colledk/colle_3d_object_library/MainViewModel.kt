@@ -26,6 +26,11 @@ class MainViewModel(): ViewModel() {
     init {
         _descriptions.value = listOf(
             ObjectDescription(
+                resourceId = R.raw.chair,
+                name = "Chair",
+                description = "This is a very cool description of the chair."
+            ),
+            ObjectDescription(
                 resourceId = R.raw.cube,
                 name = "Cube",
                 description = "This is a very cool description of the cube."
@@ -44,11 +49,6 @@ class MainViewModel(): ViewModel() {
                 resourceId = R.raw.dragon,
                 name = "Dragon",
                 description = "This is a very cool description of the dragon."
-            ),
-            ObjectDescription(
-                resourceId = R.raw.chair,
-                name = "Chair",
-                description = "This is a very cool description of the chair."
             ),
         )
     }

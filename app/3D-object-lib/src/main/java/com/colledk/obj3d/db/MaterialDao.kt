@@ -8,8 +8,6 @@ import androidx.room.Transaction
 import com.colledk.obj3d.db.model.MaterialLocal
 import com.colledk.obj3d.db.model.MaterialsLocal
 import com.colledk.obj3d.db.model.MaterialsNameLocal
-import com.colledk.obj3d.db.model.ObjectNameLocal
-import com.colledk.obj3d.parser.data.Material
 
 @Dao
 interface MaterialDao {
