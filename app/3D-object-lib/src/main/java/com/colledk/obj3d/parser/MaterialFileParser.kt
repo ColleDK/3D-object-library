@@ -151,6 +151,6 @@ internal class MaterialFileParser {
         val OPTICAL_DENSITY_REGEX = "Ni\\s+$FLOAT_DATA_REGEX".toRegex()
         val DISSOLVE_REGEX = "d\\s+$FLOAT_DATA_REGEX".toRegex()
         val ILLUM_REGEX = "illum\\s+$INT_DATA_REGEX".toRegex()
-        const val LINE_THRESHOLD = 175000
+        const val LINE_THRESHOLD = 125000
     }
 }

@@ -8,15 +8,19 @@ import org.junit.runners.JUnit4
 @RunWith(JUnit4::class)
 class MathUnitTest {
 
-    // TODO add more test data
     @Test
-    fun testSignedTetrahedronVolume(){
-        val result = MathUtil.getSignedTetrahedronVolume(VertexData(0f, 0f, 0f),MockedMathData.tetrahedronA, MockedMathData.tetrahedronB, MockedMathData.tetrahedronC)
+    fun testSignedTetrahedronVolume() {
+        val result = MathUtil.getSignedTetrahedronVolume(
+            VertexData(0f, 0f, 0f),
+            MockedMathData.tetrahedronA,
+            MockedMathData.tetrahedronB,
+            MockedMathData.tetrahedronC
+        )
         assert(result == 1f)
     }
 
     @Test
-    fun testHasSameSign(){
+    fun testHasSameSign() {
         val result1 = MathUtil.hasSameSign(*MockedMathData.hasSameSignTest1)
         val result2 = MathUtil.hasSameSign(*MockedMathData.hasSameSignTest2)
         val result3 = MathUtil.hasSameSign(*MockedMathData.hasSameSignTest3)
