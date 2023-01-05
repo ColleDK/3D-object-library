@@ -413,7 +413,7 @@ class ObjectSurfaceView(context: Context) : GLSurfaceView(context) {
 
 
     /**
-     * Function for setting the position of the lighting. The default position for the light is at position {0, 0, 1}.
+     * Function for setting the position of the lighting. The default position for the light is at position {0, 0, -1}.
      * @param x x coordinate of the position as [Float].
      * @param y y coordinate of the position as [Float].
      * @param z z coordinate of the position as [Float].
