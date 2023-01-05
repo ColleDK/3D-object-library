@@ -359,6 +359,6 @@ internal class ObjectFileParser {
         val OBJECT_DATA_REGEX = "[\\w_\\s]+".toRegex()
         val MATERIAL_REGEX = "usemtl\\s+[\\w:\\s]+".toRegex()
         val MATERIAL_DATA_REGEX = "[\\w:]+".toRegex()
-        const val LINE_THRESHOLD = 175000
+        const val LINE_THRESHOLD = 125000
     }
 }
