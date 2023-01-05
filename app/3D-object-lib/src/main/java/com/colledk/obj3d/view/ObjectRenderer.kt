@@ -40,7 +40,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
 
     // The current position of the light
     @Volatile
-    var lightPosition: FloatArray = floatArrayOf(0f, 0f, 1f)
+    var lightPosition: FloatArray = floatArrayOf(0f, 0f, -1f)
 
     // The current position of the camera
     @Volatile
@@ -207,7 +207,7 @@ internal class ObjectRenderer : GLSurfaceView.Renderer {
             viewMatrix = viewMatrix,
             projectionMatrix = projectionMatrix,
             normalMatrix = normalMatrix,
-            lightPosition = floatArrayOf(0f, 0f, -1f),
+            lightPosition = lightPosition,
             cameraPosition = cameraPosition.toFloatArray()
         )
     }
